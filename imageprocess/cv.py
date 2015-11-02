@@ -1,0 +1,688 @@
+CV_CAP_ANY      =0      # autodetect
+
+CV_CAP_MIL      =100    # MIL proprietary drivers
+
+CV_CAP_VFW      =200    # platform native
+CV_CAP_V4L      =200 
+CV_CAP_V4L2     =200 
+
+CV_CAP_FIREWARE =300    # IEEE 1394 drivers
+CV_CAP_FIREWIRE =300 
+CV_CAP_IEEE1394 =300 
+CV_CAP_DC1394   =300 
+CV_CAP_CMU1394  =300 
+
+CV_CAP_STEREO   =400    # TYZX proprietary drivers
+CV_CAP_TYZX     =400 
+CV_TYZX_LEFT    =400 
+CV_TYZX_RIGHT   =401 
+CV_TYZX_COLOR   =402 
+CV_TYZX_Z       =403 
+
+CV_CAP_QT       =500    # QuickTime
+
+CV_CAP_UNICAP   =600    # Unicap drivers
+
+CV_CAP_DSHOW    =700    # DirectShow (via videoInput)
+CV_CAP_MSMF     =1400   # Microsoft Media Foundation (via videoInput)
+
+CV_CAP_PVAPI    =800    # PvAPI  Prosilica GigE SDK
+
+CV_CAP_OPENNI   =900    # OpenNI (for Kinect)
+CV_CAP_OPENNI_ASUS =910    # OpenNI (for Asus Xtion)
+
+CV_CAP_ANDROID  =1000   # Android - not used
+CV_CAP_ANDROID_BACK =CV_CAP_ANDROID+99  # Android back camera - not used
+CV_CAP_ANDROID_FRONT =CV_CAP_ANDROID+98  # Android front camera - not used
+
+CV_CAP_XIAPI    =1100    # XIMEA Camera API
+
+CV_CAP_AVFOUNDATION = 1200   # AVFoundation framework for iOS (OS X Lion will have the same API)
+
+CV_CAP_GIGANETIX = 1300   # Smartek Giganetix GigEVisionSDK
+
+CV_CAP_INTELPERC = 1500  # Intel Perceptual Computing
+
+CV_CAP_OPENNI2 = 1600    # OpenNI2 (for Kinect)
+
+CV_CAP_GPHOTO2 = 1700
+# modes of the controlling registers (can be: auto  manual  auto single push  absolute Latter allowed with any other mode)
+# every feature can have only one mode turned on at a time
+CV_CAP_PROP_DC1394_OFF         = -4   #turn the feature off (not controlled manually nor automatically)
+CV_CAP_PROP_DC1394_MODE_MANUAL = -3  #set automatically when a value of the feature is set by the user
+CV_CAP_PROP_DC1394_MODE_AUTO = -2 
+CV_CAP_PROP_DC1394_MODE_ONE_PUSH_AUTO = -1 
+CV_CAP_PROP_POS_MSEC       =0 
+CV_CAP_PROP_POS_FRAMES     =1 
+CV_CAP_PROP_POS_AVI_RATIO  =2 
+CV_CAP_PROP_FRAME_WIDTH    =3 
+CV_CAP_PROP_FRAME_HEIGHT   =4 
+CV_CAP_PROP_FPS            =5 
+CV_CAP_PROP_FOURCC         =6 
+CV_CAP_PROP_FRAME_COUNT    =7 
+CV_CAP_PROP_FORMAT         =8 
+CV_CAP_PROP_MODE           =9 
+CV_CAP_PROP_BRIGHTNESS    =10 
+CV_CAP_PROP_CONTRAST      =11 
+CV_CAP_PROP_SATURATION    =12 
+CV_CAP_PROP_HUE           =13 
+CV_CAP_PROP_GAIN          =14 
+CV_CAP_PROP_EXPOSURE      =15 
+CV_CAP_PROP_CONVERT_RGB   =16 
+CV_CAP_PROP_WHITE_BALANCE_BLUE_U =17 
+CV_CAP_PROP_RECTIFICATION =18 
+CV_CAP_PROP_MONOCHROME    =19 
+CV_CAP_PROP_SHARPNESS     =20 
+CV_CAP_PROP_AUTO_EXPOSURE =21  # exposure control done by camera 
+                         # user can adjust refernce level
+                         # using this feature
+CV_CAP_PROP_GAMMA         =22 
+CV_CAP_PROP_TEMPERATURE   =23 
+CV_CAP_PROP_TRIGGER       =24 
+CV_CAP_PROP_TRIGGER_DELAY =25 
+CV_CAP_PROP_WHITE_BALANCE_RED_V =26 
+CV_CAP_PROP_ZOOM          =27 
+CV_CAP_PROP_FOCUS         =28 
+CV_CAP_PROP_GUID          =29 
+CV_CAP_PROP_ISO_SPEED     =30 
+CV_CAP_PROP_MAX_DC1394    =31 
+CV_CAP_PROP_BACKLIGHT     =32 
+CV_CAP_PROP_PAN           =33 
+CV_CAP_PROP_TILT          =34 
+CV_CAP_PROP_ROLL          =35 
+CV_CAP_PROP_IRIS          =36 
+CV_CAP_PROP_SETTINGS      =37 
+CV_CAP_PROP_BUFFERSIZE    =38 
+
+CV_CAP_PROP_AUTOGRAB      =1024  # property for videoio class CvCapture_Android only
+CV_CAP_PROP_SUPPORTED_PREVIEW_SIZES_STRING=1025  # readonly  tricky property  returns cpnst char* indeed
+CV_CAP_PROP_PREVIEW_FORMAT=1026  # readonly  tricky property  returns cpnst char* indeed
+
+# OpenNI map generators
+CV_CAP_OPENNI_DEPTH_GENERATOR = 1 << 31 
+CV_CAP_OPENNI_IMAGE_GENERATOR = 1 << 30 
+CV_CAP_OPENNI_GENERATORS_MASK = CV_CAP_OPENNI_DEPTH_GENERATOR + CV_CAP_OPENNI_IMAGE_GENERATOR 
+
+# Properties of cameras available through OpenNI interfaces
+CV_CAP_PROP_OPENNI_OUTPUT_MODE     = 100 
+CV_CAP_PROP_OPENNI_FRAME_MAX_DEPTH = 101  # in mm
+CV_CAP_PROP_OPENNI_BASELINE        = 102  # in mm
+CV_CAP_PROP_OPENNI_FOCAL_LENGTH    = 103  # in pixels
+CV_CAP_PROP_OPENNI_REGISTRATION    = 104  # flag
+CV_CAP_PROP_OPENNI_REGISTRATION_ON = CV_CAP_PROP_OPENNI_REGISTRATION  # flag that synchronizes the remapping depth map to image map
+                                                                # by changing depth generator's view point (if the flag is "on") or
+                                                                # sets this view point to its normal one (if the flag is "off").
+CV_CAP_PROP_OPENNI_APPROX_FRAME_SYNC = 105 
+CV_CAP_PROP_OPENNI_MAX_BUFFER_SIZE   = 106 
+CV_CAP_PROP_OPENNI_CIRCLE_BUFFER     = 107 
+CV_CAP_PROP_OPENNI_MAX_TIME_DURATION = 108 
+
+CV_CAP_PROP_OPENNI_GENERATOR_PRESENT = 109 
+CV_CAP_PROP_OPENNI2_SYNC = 110 
+CV_CAP_PROP_OPENNI2_MIRROR = 111 
+
+CV_CAP_OPENNI_IMAGE_GENERATOR_PRESENT         = CV_CAP_OPENNI_IMAGE_GENERATOR + CV_CAP_PROP_OPENNI_GENERATOR_PRESENT 
+CV_CAP_OPENNI_IMAGE_GENERATOR_OUTPUT_MODE     = CV_CAP_OPENNI_IMAGE_GENERATOR + CV_CAP_PROP_OPENNI_OUTPUT_MODE 
+CV_CAP_OPENNI_DEPTH_GENERATOR_BASELINE        = CV_CAP_OPENNI_DEPTH_GENERATOR + CV_CAP_PROP_OPENNI_BASELINE 
+CV_CAP_OPENNI_DEPTH_GENERATOR_FOCAL_LENGTH    = CV_CAP_OPENNI_DEPTH_GENERATOR + CV_CAP_PROP_OPENNI_FOCAL_LENGTH 
+CV_CAP_OPENNI_DEPTH_GENERATOR_REGISTRATION    = CV_CAP_OPENNI_DEPTH_GENERATOR + CV_CAP_PROP_OPENNI_REGISTRATION 
+CV_CAP_OPENNI_DEPTH_GENERATOR_REGISTRATION_ON = CV_CAP_OPENNI_DEPTH_GENERATOR_REGISTRATION 
+
+# Properties of cameras available through GStreamer interface
+CV_CAP_GSTREAMER_QUEUE_LENGTH           = 200  # default is 1
+
+# PVAPI
+CV_CAP_PROP_PVAPI_MULTICASTIP           = 300  # ip for anable multicast master mode. 0 for disable multicast
+CV_CAP_PROP_PVAPI_FRAMESTARTTRIGGERMODE = 301  # FrameStartTriggerMode: Determines how a frame is initiated
+CV_CAP_PROP_PVAPI_DECIMATIONHORIZONTAL  = 302  # Horizontal sub-sampling of the image
+CV_CAP_PROP_PVAPI_DECIMATIONVERTICAL    = 303  # Vertical sub-sampling of the image
+CV_CAP_PROP_PVAPI_BINNINGX              = 304  # Horizontal binning factor
+CV_CAP_PROP_PVAPI_BINNINGY              = 305  # Vertical binning factor
+CV_CAP_PROP_PVAPI_PIXELFORMAT           = 306  # Pixel format
+
+# Properties of cameras available through XIMEA SDK interface
+CV_CAP_PROP_XI_DOWNSAMPLING  = 400       # Change image resolution by binning or skipping.
+CV_CAP_PROP_XI_DATA_FORMAT   = 401        # Output data format.
+CV_CAP_PROP_XI_OFFSET_X      = 402       # Horizontal offset from the origin to the area of interest (in pixels).
+CV_CAP_PROP_XI_OFFSET_Y      = 403       # Vertical offset from the origin to the area of interest (in pixels).
+CV_CAP_PROP_XI_TRG_SOURCE    = 404       # Defines source of trigger.
+CV_CAP_PROP_XI_TRG_SOFTWARE  = 405       # Generates an internal trigger. PRM_TRG_SOURCE must be set to TRG_SOFTWARE.
+CV_CAP_PROP_XI_GPI_SELECTOR  = 406       # Selects general purpose input
+CV_CAP_PROP_XI_GPI_MODE      = 407       # Set general purpose input mode
+CV_CAP_PROP_XI_GPI_LEVEL     = 408       # Get general purpose level
+CV_CAP_PROP_XI_GPO_SELECTOR  = 409       # Selects general purpose output
+CV_CAP_PROP_XI_GPO_MODE      = 410       # Set general purpose output mode
+CV_CAP_PROP_XI_LED_SELECTOR  = 411       # Selects camera signalling LED
+CV_CAP_PROP_XI_LED_MODE      = 412       # Define camera signalling LED functionality
+CV_CAP_PROP_XI_MANUAL_WB     = 413       # Calculates White Balance(must be called during acquisition)
+CV_CAP_PROP_XI_AUTO_WB       = 414       # Automatic white balance
+CV_CAP_PROP_XI_AEAG          = 415       # Automatic exposure/gain
+CV_CAP_PROP_XI_EXP_PRIORITY  = 416       # Exposure priority (0.5 - exposure 50%  gain 50%).
+CV_CAP_PROP_XI_AE_MAX_LIMIT  = 417       # Maximum limit of exposure in AEAG procedure
+CV_CAP_PROP_XI_AG_MAX_LIMIT  = 418       # Maximum limit of gain in AEAG procedure
+CV_CAP_PROP_XI_AEAG_LEVEL    = 419        # Average intensity of output signal AEAG should achieve(in %)
+CV_CAP_PROP_XI_TIMEOUT       = 420        # Image capture timeout in milliseconds
+
+# Properties for Android cameras
+CV_CAP_PROP_ANDROID_FLASH_MODE = 8001 
+CV_CAP_PROP_ANDROID_FOCUS_MODE = 8002 
+CV_CAP_PROP_ANDROID_WHITE_BALANCE = 8003 
+CV_CAP_PROP_ANDROID_ANTIBANDING = 8004 
+CV_CAP_PROP_ANDROID_FOCAL_LENGTH = 8005 
+CV_CAP_PROP_ANDROID_FOCUS_DISTANCE_NEAR = 8006 
+CV_CAP_PROP_ANDROID_FOCUS_DISTANCE_OPTIMAL = 8007 
+CV_CAP_PROP_ANDROID_FOCUS_DISTANCE_FAR = 8008 
+CV_CAP_PROP_ANDROID_EXPOSE_LOCK = 8009 
+CV_CAP_PROP_ANDROID_WHITEBALANCE_LOCK = 8010 
+
+# Properties of cameras available through AVFOUNDATION interface
+CV_CAP_PROP_IOS_DEVICE_FOCUS = 9001 
+CV_CAP_PROP_IOS_DEVICE_EXPOSURE = 9002 
+CV_CAP_PROP_IOS_DEVICE_FLASH = 9003 
+CV_CAP_PROP_IOS_DEVICE_WHITEBALANCE = 9004 
+CV_CAP_PROP_IOS_DEVICE_TORCH = 9005 
+
+# Properties of cameras available through Smartek Giganetix Ethernet Vision interface
+# /* --- Vladimir Litvinenko (litvinenko.vladimir@gmail.com) --- */
+CV_CAP_PROP_GIGA_FRAME_OFFSET_X = 10001 
+CV_CAP_PROP_GIGA_FRAME_OFFSET_Y = 10002 
+CV_CAP_PROP_GIGA_FRAME_WIDTH_MAX = 10003 
+CV_CAP_PROP_GIGA_FRAME_HEIGH_MAX = 10004 
+CV_CAP_PROP_GIGA_FRAME_SENS_WIDTH = 10005 
+CV_CAP_PROP_GIGA_FRAME_SENS_HEIGH = 10006 
+
+CV_CAP_PROP_INTELPERC_PROFILE_COUNT               = 11001 
+CV_CAP_PROP_INTELPERC_PROFILE_IDX                 = 11002 
+CV_CAP_PROP_INTELPERC_DEPTH_LOW_CONFIDENCE_VALUE  = 11003 
+CV_CAP_PROP_INTELPERC_DEPTH_SATURATION_VALUE      = 11004 
+CV_CAP_PROP_INTELPERC_DEPTH_CONFIDENCE_THRESHOLD  = 11005 
+CV_CAP_PROP_INTELPERC_DEPTH_FOCAL_LENGTH_HORZ     = 11006 
+CV_CAP_PROP_INTELPERC_DEPTH_FOCAL_LENGTH_VERT     = 11007 
+
+# Intel PerC streams
+CV_CAP_INTELPERC_DEPTH_GENERATOR = 1 << 29 
+CV_CAP_INTELPERC_IMAGE_GENERATOR = 1 << 28 
+CV_CAP_INTELPERC_GENERATORS_MASK = CV_CAP_INTELPERC_DEPTH_GENERATOR + CV_CAP_INTELPERC_IMAGE_GENERATOR
+
+# Generic camera output modes.
+# Currently  these are supported through the libv4l interface only.
+CV_CAP_MODE_BGR  = 0  # BGR24 (default)
+CV_CAP_MODE_RGB  = 1  # RGB24
+CV_CAP_MODE_GRAY = 2  # Y8
+CV_CAP_MODE_YUYV = 3  # YUYV
+
+# Data given from depth generator.
+CV_CAP_OPENNI_DEPTH_MAP                 = 0  # Depth values in mm (CV_16UC1)
+CV_CAP_OPENNI_POINT_CLOUD_MAP           = 1  # XYZ in meters (CV_32FC3)
+CV_CAP_OPENNI_DISPARITY_MAP             = 2  # Disparity in pixels (CV_8UC1)
+CV_CAP_OPENNI_DISPARITY_MAP_32F         = 3  # Disparity in pixels (CV_32FC1)
+CV_CAP_OPENNI_VALID_DEPTH_MASK          = 4  # CV_8UC1
+
+# Data given from RGB image generator.
+CV_CAP_OPENNI_BGR_IMAGE                 = 5 
+CV_CAP_OPENNI_GRAY_IMAGE                = 6
+
+# Supported output modes of OpenNI image generator
+CV_CAP_OPENNI_VGA_30HZ     = 0 
+CV_CAP_OPENNI_SXGA_15HZ    = 1 
+CV_CAP_OPENNI_SXGA_30HZ    = 2 
+CV_CAP_OPENNI_QVGA_30HZ    = 3 
+CV_CAP_OPENNI_QVGA_60HZ    = 4
+
+CV_CAP_INTELPERC_DEPTH_MAP              = 0  # Each pixel is a 16-bit integer. The value indicates the distance from an object to the camera's XY plane or the Cartesian depth.
+CV_CAP_INTELPERC_UVDEPTH_MAP            = 1  # Each pixel contains two 32-bit floating point values in the range of 0-1  representing the mapping of depth coordinates to the color coordinates.
+CV_CAP_INTELPERC_IR_MAP                 = 2  # Each pixel is a 16-bit integer. The value indicates the intensity of the reflected laser beam.
+CV_CAP_INTELPERC_IMAGE                  = 3
+
+CV_CAP_PROP_GPHOTO2_PREVIEW           = 17001  # Capture only preview from liveview mode.
+CV_CAP_PROP_GPHOTO2_WIDGET_ENUMERATE  = 17002  # Readonly  returns (const char *).
+CV_CAP_PROP_GPHOTO2_RELOAD_CONFIG     = 17003  # Trigger  only by set. Reload camera settings.
+CV_CAP_PROP_GPHOTO2_RELOAD_ON_CHANGE  = 17004  # Reload all settings on set.
+CV_CAP_PROP_GPHOTO2_COLLECT_MSGS      = 17005  # Collect messages with details.
+CV_CAP_PROP_GPHOTO2_FLUSH_MSGS        = 17006  # Readonly  returns (const char *).
+CV_CAP_PROP_SPEED                     = 17007  # Exposure speed. Can be readonly  depends on camera program.
+CV_CAP_PROP_APERTURE                  = 17008  # Aperture. Can be readonly  depends on camera program.
+CV_CAP_PROP_EXPOSUREPROGRAM           = 17009  # Camera exposure program.
+CV_CAP_PROP_VIEWFINDER                = 17010  # Enter liveview mode.
+
+CV_WINDOW_NORMAL     = 0x00000000  # the user can resize the window (no constraint) / also use to switch a fullscreen window to a normal size
+CV_WINDOW_AUTOSIZE   = 0x00000001  # the user cannot resize the window, the size is constrainted by the image displayed
+CV_WINDOW_OPENGL     = 0x00001000  # window with opengl support
+
+
+CV_WINDOW_FULLSCREEN = 1           # change the window to fullscreen
+CV_WINDOW_FREERATIO  = 0x00000100  # the image expends as much as it can (no ratio constraint)
+CV_WINDOW_KEEPRATIO  = 0x00000000  # the ratio of the image is respected
+
+# Flags for set / getWindowProperty
+CV_WND_PROP_FULLSCREEN   = 0  # fullscreen property    (can be WINDOW_NORMAL or WINDOW_FULLSCREEN)
+CV_WND_PROP_AUTOSIZE     = 1  # autosize property      (can be WINDOW_NORMAL or WINDOW_AUTOSIZE)
+CV_WND_PROP_ASPECT_RATIO = 2  # window's aspect ration (can be set to WINDOW_FREERATIO or WINDOW_KEEPRATIO);
+CV_WND_PROP_OPENGL       = 3  # opengl support
+
+CV_EVENT_MOUSEMOVE      = 0
+CV_EVENT_LBUTTONDOWN    = 1
+CV_EVENT_RBUTTONDOWN    = 2
+CV_EVENT_MBUTTONDOWN    = 3
+CV_EVENT_LBUTTONUP      = 4
+CV_EVENT_RBUTTONUP      = 5
+CV_EVENT_MBUTTONUP      = 6
+CV_EVENT_LBUTTONDBLCLK  = 7
+CV_EVENT_RBUTTONDBLCLK  = 8
+CV_EVENT_MBUTTONDBLCLK  = 9
+CV_EVENT_MOUSEWHEEL     = 10
+CV_EVENT_MOUSEHWHEEL    = 11
+
+
+CV_EVENT_FLAG_LBUTTON   = 1
+CV_EVENT_FLAG_RBUTTON   = 2
+CV_EVENT_FLAG_MBUTTON   = 4
+CV_EVENT_FLAG_CTRLKEY   = 8
+CV_EVENT_FLAG_SHIFTKEY  = 16
+CV_EVENT_FLAG_ALTKEY    = 32
+
+QT_FONT_LIGHT           = 25  #QFont::Light
+QT_FONT_NORMAL          = 50  #QFont::Normal
+QT_FONT_DEMIBOLD        = 63  #QFont::DemiBold
+QT_FONT_BOLD            = 75  #QFont::Bold
+QT_FONT_BLACK           = 87  #QFont::Black
+
+
+QT_STYLE_NORMAL         = 0  #QFont::StyleNormal
+QT_STYLE_ITALIC         = 1  #QFont::StyleItalic
+QT_STYLE_OBLIQUE        = 2  #QFont::StyleOblique
+
+QT_PUSH_BUTTON = 0
+QT_CHECKBOX    = 1
+QT_RADIOBOX    = 2
+
+######## types_c.h ##############
+CV_BLUR_NO_SCALE =0
+CV_BLUR  =1
+CV_GAUSSIAN  =2
+CV_MEDIAN =3
+CV_BILATERAL =4
+
+CV_GAUSSIAN_5x5 = 7
+
+CV_SCHARR =-1
+CV_MAX_SOBEL_KSIZE =7
+
+CV_BGR2BGRA    =0
+CV_RGB2RGBA    =CV_BGR2BGRA
+
+CV_BGRA2BGR    =1
+CV_RGBA2RGB    =CV_BGRA2BGR
+
+CV_BGR2RGBA    =2
+CV_RGB2BGRA    =CV_BGR2RGBA
+
+CV_RGBA2BGR    =3
+CV_BGRA2RGB    =CV_RGBA2BGR
+
+CV_BGR2RGB     =4
+CV_RGB2BGR     =CV_BGR2RGB
+
+CV_BGRA2RGBA   =5
+CV_RGBA2BGRA   =CV_BGRA2RGBA
+
+CV_BGR2GRAY    =6
+CV_RGB2GRAY    =7
+CV_GRAY2BGR    =8
+CV_GRAY2RGB    =CV_GRAY2BGR
+CV_GRAY2BGRA   =9
+CV_GRAY2RGBA   =CV_GRAY2BGRA
+CV_BGRA2GRAY   =10
+CV_RGBA2GRAY   =11
+
+CV_BGR2BGR565  =12
+CV_RGB2BGR565  =13
+CV_BGR5652BGR  =14
+CV_BGR5652RGB  =15
+CV_BGRA2BGR565 =16
+CV_RGBA2BGR565 =17
+CV_BGR5652BGRA =18
+CV_BGR5652RGBA =19
+
+CV_GRAY2BGR565 =20
+CV_BGR5652GRAY =21
+
+CV_BGR2BGR555  =22
+CV_RGB2BGR555  =23
+CV_BGR5552BGR  =24
+CV_BGR5552RGB  =25
+CV_BGRA2BGR555 =26
+CV_RGBA2BGR555 =27
+CV_BGR5552BGRA =28
+CV_BGR5552RGBA =29
+
+CV_GRAY2BGR555 =30
+CV_BGR5552GRAY =31
+
+CV_BGR2XYZ     =32
+CV_RGB2XYZ     =33
+CV_XYZ2BGR     =34
+CV_XYZ2RGB     =35
+
+CV_BGR2YCrCb   =36
+CV_RGB2YCrCb   =37
+CV_YCrCb2BGR   =38
+CV_YCrCb2RGB   =39
+
+CV_BGR2HSV     =40
+CV_RGB2HSV     =41
+
+CV_BGR2Lab     =44
+CV_RGB2Lab     =45
+
+CV_BayerBG2BGR =46
+CV_BayerGB2BGR =47
+CV_BayerRG2BGR =48
+CV_BayerGR2BGR =49
+
+CV_BayerBG2RGB =CV_BayerRG2BGR
+CV_BayerGB2RGB =CV_BayerGR2BGR
+CV_BayerRG2RGB =CV_BayerBG2BGR
+CV_BayerGR2RGB =CV_BayerGB2BGR
+
+CV_BGR2Luv     =50
+CV_RGB2Luv     =51
+CV_BGR2HLS     =52
+CV_RGB2HLS     =53
+
+CV_HSV2BGR     =54
+CV_HSV2RGB     =55
+
+CV_Lab2BGR     =56
+CV_Lab2RGB     =57
+CV_Luv2BGR     =58
+CV_Luv2RGB     =59
+CV_HLS2BGR     =60
+CV_HLS2RGB     =61
+
+CV_BayerBG2BGR_VNG =62
+CV_BayerGB2BGR_VNG =63
+CV_BayerRG2BGR_VNG =64
+CV_BayerGR2BGR_VNG =65
+
+CV_BayerBG2RGB_VNG =CV_BayerRG2BGR_VNG
+CV_BayerGB2RGB_VNG =CV_BayerGR2BGR_VNG
+CV_BayerRG2RGB_VNG =CV_BayerBG2BGR_VNG
+CV_BayerGR2RGB_VNG =CV_BayerGB2BGR_VNG
+
+CV_BGR2HSV_FULL = 66
+CV_RGB2HSV_FULL = 67
+CV_BGR2HLS_FULL = 68
+CV_RGB2HLS_FULL = 69
+
+CV_HSV2BGR_FULL = 70
+CV_HSV2RGB_FULL = 71
+CV_HLS2BGR_FULL = 72
+CV_HLS2RGB_FULL = 73
+
+CV_LBGR2Lab     = 74
+CV_LRGB2Lab     = 75
+CV_LBGR2Luv     = 76
+CV_LRGB2Luv     = 77
+
+CV_Lab2LBGR     = 78
+CV_Lab2LRGB     = 79
+CV_Luv2LBGR     = 80
+CV_Luv2LRGB     = 81
+
+CV_BGR2YUV      = 82
+CV_RGB2YUV      = 83
+CV_YUV2BGR      = 84
+CV_YUV2RGB      = 85
+
+CV_BayerBG2GRAY = 86
+CV_BayerGB2GRAY = 87
+CV_BayerRG2GRAY = 88
+CV_BayerGR2GRAY = 89
+
+#YUV 4:2:0 formats famil
+CV_YUV2RGB_NV12 = 90
+CV_YUV2BGR_NV12 = 91
+CV_YUV2RGB_NV21 = 92
+CV_YUV2BGR_NV21 = 93
+CV_YUV420sp2RGB = CV_YUV2RGB_NV21
+CV_YUV420sp2BGR = CV_YUV2BGR_NV21
+
+CV_YUV2RGBA_NV12 = 94
+CV_YUV2BGRA_NV12 = 95
+CV_YUV2RGBA_NV21 = 96
+CV_YUV2BGRA_NV21 = 97
+CV_YUV420sp2RGBA = CV_YUV2RGBA_NV21
+CV_YUV420sp2BGRA = CV_YUV2BGRA_NV21
+
+CV_YUV2RGB_YV12 = 98
+CV_YUV2BGR_YV12 = 99
+CV_YUV2RGB_IYUV = 100
+CV_YUV2BGR_IYUV = 101
+CV_YUV2RGB_I420 = CV_YUV2RGB_IYUV
+CV_YUV2BGR_I420 = CV_YUV2BGR_IYUV
+CV_YUV420p2RGB = CV_YUV2RGB_YV12
+CV_YUV420p2BGR = CV_YUV2BGR_YV12
+
+CV_YUV2RGBA_YV12 = 102
+CV_YUV2BGRA_YV12 = 103
+CV_YUV2RGBA_IYUV = 104
+CV_YUV2BGRA_IYUV = 105
+CV_YUV2RGBA_I420 = CV_YUV2RGBA_IYUV
+CV_YUV2BGRA_I420 = CV_YUV2BGRA_IYUV
+CV_YUV420p2RGBA = CV_YUV2RGBA_YV12
+CV_YUV420p2BGRA = CV_YUV2BGRA_YV12
+
+CV_YUV2GRAY_420 = 106
+CV_YUV2GRAY_NV21 = CV_YUV2GRAY_420
+CV_YUV2GRAY_NV12 = CV_YUV2GRAY_420
+CV_YUV2GRAY_YV12 = CV_YUV2GRAY_420
+CV_YUV2GRAY_IYUV = CV_YUV2GRAY_420
+CV_YUV2GRAY_I420 = CV_YUV2GRAY_420
+CV_YUV420sp2GRAY = CV_YUV2GRAY_420
+CV_YUV420p2GRAY = CV_YUV2GRAY_420
+
+#YUV 4:2:2 formats famil
+CV_YUV2RGB_UYVY = 107
+CV_YUV2BGR_UYVY = 108
+#CV_YUV2RGB_VYUY = 109
+#CV_YUV2BGR_VYUY = 110
+CV_YUV2RGB_Y422 = CV_YUV2RGB_UYVY
+CV_YUV2BGR_Y422 = CV_YUV2BGR_UYVY
+CV_YUV2RGB_UYNV = CV_YUV2RGB_UYVY
+CV_YUV2BGR_UYNV = CV_YUV2BGR_UYVY
+
+CV_YUV2RGBA_UYVY = 111
+CV_YUV2BGRA_UYVY = 112
+#CV_YUV2RGBA_VYUY = 113
+#CV_YUV2BGRA_VYUY = 114
+CV_YUV2RGBA_Y422 = CV_YUV2RGBA_UYVY
+CV_YUV2BGRA_Y422 = CV_YUV2BGRA_UYVY
+CV_YUV2RGBA_UYNV = CV_YUV2RGBA_UYVY
+CV_YUV2BGRA_UYNV = CV_YUV2BGRA_UYVY
+
+CV_YUV2RGB_YUY2 = 115
+CV_YUV2BGR_YUY2 = 116
+CV_YUV2RGB_YVYU = 117
+CV_YUV2BGR_YVYU = 118
+CV_YUV2RGB_YUYV = CV_YUV2RGB_YUY2
+CV_YUV2BGR_YUYV = CV_YUV2BGR_YUY2
+CV_YUV2RGB_YUNV = CV_YUV2RGB_YUY2
+CV_YUV2BGR_YUNV = CV_YUV2BGR_YUY2
+
+CV_YUV2RGBA_YUY2 = 119
+CV_YUV2BGRA_YUY2 = 120
+CV_YUV2RGBA_YVYU = 121
+CV_YUV2BGRA_YVYU = 122
+CV_YUV2RGBA_YUYV = CV_YUV2RGBA_YUY2
+CV_YUV2BGRA_YUYV = CV_YUV2BGRA_YUY2
+CV_YUV2RGBA_YUNV = CV_YUV2RGBA_YUY2
+CV_YUV2BGRA_YUNV = CV_YUV2BGRA_YUY2
+
+CV_YUV2GRAY_UYVY = 123
+CV_YUV2GRAY_YUY2 = 124
+#CV_YUV2GRAY_VYUY = CV_YUV2GRAY_UYVY
+CV_YUV2GRAY_Y422 = CV_YUV2GRAY_UYVY
+CV_YUV2GRAY_UYNV = CV_YUV2GRAY_UYVY
+CV_YUV2GRAY_YVYU = CV_YUV2GRAY_YUY2
+CV_YUV2GRAY_YUYV = CV_YUV2GRAY_YUY2
+CV_YUV2GRAY_YUNV = CV_YUV2GRAY_YUY2
+
+CV_RGBA2mRGBA = 125
+CV_mRGBA2RGBA = 126
+
+CV_RGB2YUV_I420 = 127
+CV_BGR2YUV_I420 = 128
+CV_RGB2YUV_IYUV = CV_RGB2YUV_I420
+CV_BGR2YUV_IYUV = CV_BGR2YUV_I420
+
+CV_RGBA2YUV_I420 = 129
+CV_BGRA2YUV_I420 = 130
+CV_RGBA2YUV_IYUV = CV_RGBA2YUV_I420
+CV_BGRA2YUV_IYUV = CV_BGRA2YUV_I420
+CV_RGB2YUV_YV12  = 131
+CV_BGR2YUV_YV12  = 132
+CV_RGBA2YUV_YV12 = 133
+CV_BGRA2YUV_YV12 = 134
+
+CV_BayerBG2BGR_EA = 135
+CV_BayerGB2BGR_EA = 136
+CV_BayerRG2BGR_EA = 137
+CV_BayerGR2BGR_EA = 138
+
+CV_BayerBG2RGB_EA = CV_BayerRG2BGR_EA
+CV_BayerGB2RGB_EA = CV_BayerGR2BGR_EA
+CV_BayerRG2RGB_EA = CV_BayerBG2BGR_EA
+CV_BayerGR2RGB_EA = CV_BayerGB2BGR_EA
+
+CV_COLORCVT_MAX  = 139
+
+
+CV_INTER_NN        =0
+CV_INTER_LINEAR    =1
+CV_INTER_CUBIC     =2
+CV_INTER_AREA      =3
+CV_INTER_LANCZOS4  =4
+
+CV_WARP_FILL_OUTLIERS =8
+CV_WARP_INVERSE_MAP  =16
+
+
+CV_SHAPE_RECT      =0
+CV_SHAPE_CROSS     =1
+CV_SHAPE_ELLIPSE   =2
+CV_SHAPE_CUSTOM    =100 #!< custom structuring element
+
+
+CV_MOP_ERODE        =0
+CV_MOP_DILATE       =1
+CV_MOP_OPEN         =2
+CV_MOP_CLOSE        =3
+CV_MOP_GRADIENT     =4
+CV_MOP_TOPHAT       =5
+CV_MOP_BLACKHAT     =6
+
+CV_TM_SQDIFF        =0
+CV_TM_SQDIFF_NORMED =1
+CV_TM_CCORR         =2
+CV_TM_CCORR_NORMED  =3
+CV_TM_CCOEFF        =4
+CV_TM_CCOEFF_NORMED =5
+
+
+CV_RETR_EXTERNAL=0
+CV_RETR_LIST=1
+CV_RETR_CCOMP=2
+CV_RETR_TREE=3
+CV_RETR_FLOODFILL=4
+
+
+CV_CHAIN_CODE=0
+CV_CHAIN_APPROX_NONE=1
+CV_CHAIN_APPROX_SIMPLE=2
+CV_CHAIN_APPROX_TC89_L1=3
+CV_CHAIN_APPROX_TC89_KCOS=4
+CV_LINK_RUNS=5
+
+CV_POLY_APPROX_DP = 0
+
+CV_CONTOURS_MATCH_I1  =1
+CV_CONTOURS_MATCH_I2  =2
+CV_CONTOURS_MATCH_I3  =3
+
+CV_CLOCKWISE         =1
+CV_COUNTER_CLOCKWISE =2
+
+
+CV_COMP_CORREL        =0
+CV_COMP_CHISQR        =1
+CV_COMP_INTERSECT     =2
+CV_COMP_BHATTACHARYYA =3
+CV_COMP_HELLINGER     =CV_COMP_BHATTACHARYYA
+CV_COMP_CHISQR_ALT    =4
+CV_COMP_KL_DIV        =5
+
+
+
+
+CV_DIST_MASK_3   =3
+CV_DIST_MASK_5   =5
+CV_DIST_MASK_PRECISE =0
+
+
+
+
+CV_DIST_LABEL_CCOMP = 0
+CV_DIST_LABEL_PIXEL = 1
+
+
+
+
+CV_DIST_USER    =-1
+CV_DIST_L1      =1
+CV_DIST_L2      =2
+CV_DIST_C       =3
+CV_DIST_L12     =4
+CV_DIST_FAIR    =5
+CV_DIST_WELSCH  =6
+CV_DIST_HUBER   =7    
+
+
+
+
+
+CV_THRESH_BINARY      =0
+CV_THRESH_BINARY_INV  =1
+CV_THRESH_TRUNC       =2
+CV_THRESH_TOZERO      =3
+CV_THRESH_TOZERO_INV  =4
+CV_THRESH_MASK        =7
+CV_THRESH_OTSU        =8
+CV_THRESH_TRIANGLE    =16  
+
+
+
+
+
+CV_ADAPTIVE_THRESH_MEAN_C  =0
+CV_ADAPTIVE_THRESH_GAUSSIAN_C  =1
+
+
+
+
+CV_FLOODFILL_FIXED_RANGE =(1 << 16)
+CV_FLOODFILL_MASK_ONLY   =(1 << 17)
+
+
+
+
+
+CV_CANNY_L2_GRADIENT  =(1 << 31)
+
+
+
+
+CV_HOUGH_STANDARD =0
+CV_HOUGH_PROBABILISTIC =1
+CV_HOUGH_MULTI_SCALE =2
+CV_HOUGH_GRADIENT =3
