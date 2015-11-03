@@ -7,6 +7,10 @@
 #
 # @author S.H.Lee
 #
+# @version 1.1
+# @since 2015-11-03
+# Add attributes for width and height.
+#
 # @version 1.0
 # @since 2015-10-08
 # First implementation
@@ -25,8 +29,15 @@ class Camera:
 
 		if width != -1:
 			capture.set(cv.CV_CAP_PROP_FRAME_WIDTH, width)
+			self.width = width
+		else:
+			self.width = capture.get(cv.CV_CAP_PROP_FRAME_WIDTH)
+
 		if height != -1:
 			capture.set(cv.CV_CAP_PROP_FRAME_HEIGHT, height)
+			self.height = height
+		else:
+			self.height = capture.get(cv.CV_CAP_PROP_FRAME_HEIGHT)
 
 		self.capture = capture
 

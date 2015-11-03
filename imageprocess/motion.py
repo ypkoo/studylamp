@@ -11,8 +11,16 @@
 # First implementation
 
 class Motion:
-	def __init__(self):
+	def __init__(self, width, height):
+		self.width = width
+		self.height = height
+
+		self.points = [] # list of (x, y, t)
+		self.start_point = None
+
+	def registerPoint(self, new_point, time):
 		pass
 
-	def analyze(self, point_list):
-		return point_list, None
+
+	def analyze(self):
+		return None

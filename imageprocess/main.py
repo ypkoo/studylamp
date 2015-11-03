@@ -6,6 +6,10 @@
 #
 # @author S.H.Lee
 #
+# @version 1.2
+# @since 2015-11-03
+# Move accumulative points list structure into Motion structure.
+#
 # @version 1.1
 # @since 2015-11-02
 # Change on method to receive user's input (laser to finger)
@@ -27,8 +31,6 @@ motion = Motion()
 
 ocr = OCR()
 
-finger_positions = []
-
 '''
 get finger point (by FingerTracker object)
 -> accumulate information about point
@@ -41,9 +43,9 @@ def loop():
 	image = camera.getImage()
 	new_point = finger_tracker.getFingerPoint(image)
 	if new_point:
-		finger_positions.append(new_point)
+		motion.registerPoint(new_point, time.time())
 
-	finger_positions, specificMotion = motion.analyze(finger_positions)
+	specificMotion = motion.analyze()
 
 	if specificMotion:
 		if specificMotion.type == "line":
