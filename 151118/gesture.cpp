@@ -1,3 +1,18 @@
+// gesture.cpp
+// 
+// Gesture class
+// Analyze continuous points set
+// 
+// @author S.H.Lee
+// 
+// @version 1.1
+// @since 2015-11-23
+// Modified code for more natural recognition.
+//
+// @version 1.0
+// @since 2015-11-19
+// First implementation
+
 #include "gesture.hpp"
 #include <iostream>
 #include <string>
@@ -7,211 +22,220 @@ using namespace gesture;
 using namespace cv;
 using namespace std;
 
-Gesture::Gesture()
+Gesture::Gesture() : groups()
 {
-	points = (struct tp *) malloc(sizeof(struct tp) * POINT_COUNT);
-	clusters = (struct cluster *) malloc(sizeof(struct cluster) * CLUSTER_COUNT);
-	lines = (struct line *) malloc(sizeof(struct line) * (CLUSTER_COUNT-1));
-	pindex = 0;
-	cindex = 0;
+   points = (struct timePoint *) malloc(sizeof(struct timePoint) * POINT_COUNT);
+   p_index = 0;
 }
 
 Gesture::~Gesture()
 {
-	free(points);
-	free(clusters);
-	free(lines);
+}
+void Gesture::DouglasPecker(std::vector<size_t>& _marked, size_t front, size_t end){
+   float dmax = 0; size_t index = 0;
+   size_t i;
+   float d;
+
+   // equation of line L:Ax+By+C=0, which passes through points[front] and point[end]
+   int32_t A = points[end].y - points[front].y;
+   int32_t B = points[front].x - points[end].x;
+   int32_t C = points[end].x*points[front].y - points[front].x*points[end].y;
+   float sqABsq = sqrt(A*A+B*B);
+
+   int32_t x, y;
+   for (i = front+1; i < end; i++){
+      // get distance between points[i] and line L.
+      x = points[i].x;
+      y = points[i].y;
+      d = abs(A*x+B*y+C)/sqABsq;
+      if (d > dmax) {
+         index = i;
+         dmax = d;
+      }
+   }
+
+   if (dmax > epsilon) {
+      if (index != front && index != end)
+         _marked.push_back(index);
+      if (index - front > 1)
+         DouglasPecker(_marked, front, index);
+      if (end - index > 1)
+         DouglasPecker(_marked, index, end);
+   }
 }
 
-result Gesture::registerPoint(uint32_t x, uint32_t y, uint32_t t)
+result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 {
-	// if buffer becomes to be full, remove all clusters except the last three clusters.
-	if (pindex == POINT_COUNT - 2 || cindex == CLUSTER_COUNT - 2) {
-		cout << "gesture.h: cleared" << endl;
-		clear();
-	}
+   // cout << "gesture called" << endl;
+   // if buffer becomes to be full, remove all groups except the last three groups.
+   if (groups.size() == groups.max_size()) {
+      cout << "gesture.cpp: groups size exceeded, fatal error" << endl;
+      exit (-1);
+   }
+   if (p_index == POINT_COUNT) {
+      cout << "gesture.cpp: points buffer are cleaned" << endl;
+      if (groups.size() == 0){
+         memset(points, 0, sizeof(struct timePoint)*(p_index-1));
+         p_index = 0;
+      }
+      else {
+         size_t first = groups[0].start;
+         memmove(points, &points[first], sizeof(struct timePoint)*(p_index-first-1));
+         size_t index = 0;
+         for (index = 0; index < groups.size(); index++) {
+            groups[index].start -= first;
+            groups[index].end -= first;
+         }
+         p_index -= first;
+      }
+   }
 
-	bool checked = false;
-	if (pindex > 0){
-		points[pindex].x = x;
-		points[pindex].y = y;
-		points[pindex].t = t;
+   if (x >= 0 && y >= 0) {
+      // process new point
+   // cout << "group size " << groups.size() << endl;
+      if (!groups.empty()){
+         struct group *end_gp = &groups[groups.size()-1];
+         uint32_t count = end_gp->count;
+         //cout << count << end_gp->x << ""endl;
+         float xdiff = end_gp->x - x;
+         float ydiff = end_gp->y - y;
+         if (xdiff * xdiff + ydiff * ydiff < SIZE_LIMIT_SQUARE) {
+            end_gp->x = ((end_gp->x*count)+x)/(count+1);
+            end_gp->y = ((end_gp->y*count)+y)/(count+1);
+            end_gp->duration +=  t-points[p_index-1].t;
+            end_gp->count++;
+            end_gp->collect_time_limit = t + TIME_TO_MOTION;
+         } else { // so far
+            // if group is not completed, delete and make new group.
+            if (end_gp->duration < TIME_TO_GROUP) {
+               end_gp->x = x;
+               end_gp->y = y;
+               end_gp->duration = 0;
+               end_gp->start = end_gp->end = p_index;
+               end_gp->count = 1;
+               end_gp->collect_time_limit = 0; // it is not meaningful to set.
+            }
+            // else make new group.
+            else {
+               struct group new_gp;
+               new_gp.x = x;
+               new_gp.y = y;
+               new_gp.duration = 0;
+               new_gp.start = new_gp.end = p_index;
+               new_gp.count = 1;
+               new_gp.collect_time_limit = 0; // it is not meaningful to set.
+               groups.push_back(new_gp);
+            }
+         }
+      }
+      else {
+         // if there was no group
+         struct group new_gp;
+         new_gp.x = x;
+         new_gp.y = y;
+         new_gp.duration = 0;
+         new_gp.start = new_gp.end = p_index;
+         new_gp.count = 1;
+         new_gp.collect_time_limit = 0; // it is not meaningful to set.
+         groups.push_back(new_gp);
+      }
 
-		uint32_t time_diff = t - points[pindex-1].t;
-		
-		if (time_diff > TIME_LIMIT){
-			clear();
-		}
-		// TIME IN
-		else{
-			// CLUSTERING
-			if (clusters[cindex].end == pindex-1){
-				uint32_t count = clusters[cindex].count;
-				uint32_t xsq = (clusters[cindex].cx - x) * (clusters[cindex].cx - x);
-				uint32_t ysq = (clusters[cindex].cy - y) * (clusters[cindex].cy - y);
+      // register new point
+      points[p_index].x = x;
+      points[p_index].y = y;
+      points[p_index].t = t;
 
-				// enoughly NEAR, just enough to CLUSTER.
-				if (xsq + ysq < SIZE_LIMIT_SQUARE){
-					clusters[cindex].cx *= count;
-					clusters[cindex].cx += x;
-					clusters[cindex].cx /= count+1;
-					clusters[cindex].cy *= count;
-					clusters[cindex].cy += y;
-					clusters[cindex].cy /= count+1;
-					clusters[cindex].duration += time_diff; // cluster could completed at here.
-					clusters[cindex].end++;
-					clusters[cindex].count++;
+      p_index++;
+   }
+   // motion should be handled, whenever new points are accepted or not.
+   // which motion should be handled, if there is many motions? -> lets consider the last element.
+   result res;
+   res.type = NO_TYPE;
+   size_t index;
+   struct group *cur;
+   if (!groups.empty()) {
+      for (index = groups.size()-1; index != -1; index--) {
+         cur = &groups[index];
+         if (cur->duration > TIME_TO_GROUP && t >= cur->collect_time_limit) {
+            points[cur->end].x = (uint32_t) cur->x;
+            points[cur->end].y = (uint32_t) cur->y;
 
-					if (clusters[cindex].duration > TIME_TO_CLUSTER && cindex > 0){
-						updateLine (cindex-1);
-						checked = check ();
-					}
-				} else { // so FAR
-					// already made cluster
-					if (clusters[cindex].duration > TIME_TO_CLUSTER) 
-						cindex ++;
+            // recursive call of DouglasPecker
+            marked.clear();
+            marked.push_back (cur->end);
+            marked.push_back (p_index-1);
+            // cout << "marked size: "<<marked.size()<<endl;
+            DouglasPecker(marked, cur->end, p_index-1);
 
-					clusters[cindex].cx = x;
-					clusters[cindex].cy = y;
-					clusters[cindex].duration = 0;
-					clusters[cindex].start = clusters[cindex].end = pindex;
-					clusters[cindex].count = 1;
-				}
-			}
-		}
-	}
-	if (pindex == 0) {
-		points[pindex].x = x;
-		points[pindex].y = y;
-		points[pindex].t = t;
+            // analyze marked.
+            sort(marked.begin(), marked.end());
 
-		clusters[0].cx = x;
-		clusters[0].cy = y;
-		clusters[0].duration = 0;
-		clusters[0].start = clusters[0].end = 0;
-		clusters[0].count = 1;
-	}
+            printf("gesture.cpp: analyzed. size %u:\n", marked.size());
+            int i;
+            for (i = 0; i<marked.size(); i++) {
+               printf("[%u]: (%d, %d)\n", marked[i], points[marked[i]].x, points[marked[i]].y);
+            }
 
-	pindex++;
+            float x[4];
+            float y[4];
 
-	result res;
-	if (checked) {
-		res.type = V_TYPE;
-		res.V1_x = clusters[cindex-2].cx;
-		res.V1_y = clusters[cindex-2].cy;
-		res.V2_x = clusters[cindex-1].cx;
-		res.V2_y = clusters[cindex-1].cy;
-		res.V3_x = clusters[cindex].cx;
-		res.V3_y = clusters[cindex].cy;
-	} else {
-		res.type = NO_TYPE;
-	}
-	return res;
-}
-void Gesture::clear (void)
-{
-	memset (points, 0, sizeof(struct tp) * POINT_COUNT);
-	memset (clusters, 0, sizeof(struct cluster) * CLUSTER_COUNT);
-	memset (lines, 0, sizeof(struct line) * (CLUSTER_COUNT-1));
-	cindex = pindex = 0;
-}
+            size_t tmp;
+            for (tmp = 0; tmp < marked.size() && tmp < 4; tmp++) {
+               x[tmp] = (float) points[marked[tmp]].x;
+               y[tmp] = (float) points[marked[tmp]].y;
+            }
+            // v case. 0.5 through 3
+            if (marked.size() >= 3 && x[1] != x[0] && x[2] != x[1]) {
+               float slope1 = (y[0]-y[1])/(x[0]-x[1]);
+               float slope2 = (y[1]-y[2])/(x[1]-x[2]);
+               if (-0.5 > slope1 && slope1 > -3
+                  && 0.5 < slope2 && slope2 < 3) {
+                  res.type = V_TYPE;
+                  res.V1_x = x[0];
+                  res.V1_y = y[0];
+                  res.V2_x = x[1];
+                  res.V2_y = y[1];
+                  res.V3_x = x[2];
+                  res.V3_y = y[2];
+                  cout << "v shape found" << endl;
+               }
+            }
+            else {
 
-void Gesture::updateLine (size_t index)
-{
-	struct line *line = &lines[index];
+            }
 
-	struct cluster *from = &clusters[index];
-	struct cluster *to = &clusters[index+1];
-
-
-	uint32_t s1, s2;
-	float x1, x2, y1, y2;
-	s1 = from->end - from->start + 1;
-	s2 = to->end - to->start + 1;
-
-	x1 = from->cx; x2 = to->cx;
-	y1 = from->cy; y2 = to->cy;
-
-	line->a = y2-y1;
-	line->b = x1-x2;
-	line->c = x2*y1-x1*y2;
-
-	if (line->b != 0)
-		line->slope = -line->a/line->b;
-	else
-		line->slope = 10000000.0;
-
-	line->length = sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
-	line->duration = points[to->start-1].t - points[from->end+1].t;
-
-	// If there is NO points between two clusters, prevent zero division.
-	if (to->start - from->end <= 1) {
-		line->is_linear = true;
-		return;
-	}
-
-	uint32_t tolerance = 0;
-	uint32_t t_limit = line->duration * 2 / 4;
-
-	float tmp;
-	uint32_t i;
-	bool failed = false;
-	float limit = sqrt((line->a)*(line->a) + (line->b)*(line->b))*line->length;
-	for (i=from->end+1; i<to->start && !failed; i++){
-		tmp = line->a * points[i].x + line->b * points[i].y + line->c;
-		if (tmp < -limit || tmp > limit || 
-			((x1+x2)/2-points[i].x)*((x1+x2)/2-points[i].x)+((y1+y2)/2-points[i].y)*((y1+y2)/2-points[i].y)
-				> (line->length/2)*(line->length/2)) {
-			tolerance += points[i+1].t - points[i-1].t;
-			if (tolerance > t_limit)
-				failed = true;
-		}
-	}
-	line->is_linear = !failed;
-
-	// int i; long long unsigned int sum = 0; int tmp;
-	// for (i=from->end+1; i<to->start; i++) {
-	// 	tmp = line->a * points[i].x + line->b * points[i].y + line->c;
-	// 	sum += tmp*tmp;
-	// }
-
-	// line->error = sqrt ((float)sum / (float) ((to->start-from->end-1)*(line->a * line->a + line->b * line->b)));
-}
-
-bool Gesture::check (void) {
-	// cout << "check " << lines[cindex-2].slope << ", " 
-	// << lines[cindex-1].slope << endl;
-	if (cindex > 1
-		&& lines[cindex-2].slope > 0.3 && lines[cindex-2].slope < 3
-		&& lines[cindex-1].slope > -3 && lines[cindex-1].slope < -0.3
-		&& lines[cindex-2].is_linear
-		&& lines[cindex-1].is_linear) {
-		cout << "gesture.h: V shape finded: ("
-			<< clusters[cindex-1].cx << ", "
-			<< clusters[cindex-1].cy << ")" << endl;
-		clear();
-		return true;
-	}
-	return false;
+            // clear all preceding groups.
+            for (;index != -1; index--) {
+               groups.pop_front();
+            }
+            // cout << "size " << groups.size() << endl;
+            return res;
+         }
+      }
+   }
+   return res;
 }
 
 void Gesture::visualize (Mat& img) {
-	size_t i;
-	for (i = 0; i < cindex; i++){
-		if (clusters[i].duration > TIME_TO_CLUSTER) {
-			circle(img,
-				Point(clusters[i].cx,
-					clusters[i].cy),
-				8, Scalar(255, 0, 0), CV_FILLED);
-			if (i > 0 && lines[i-1].is_linear) {
-				cv::line(img,
-					Point (clusters[i-1].cx,
-						clusters[i-1].cy),
-					Point (clusters[i].cx,
-						clusters[i].cy),
-					Scalar(40, 255, 40),
-					4);
-			}
-		}
-	}
+   size_t i;
+   for (i = 0; i < groups.size(); i++){
+      if (groups[i].duration > TIME_TO_GROUP) {
+         circle(img,
+            Point(groups[i].x, groups[i].y),
+            8, Scalar(255, 0, 0), CV_FILLED);
+         // printf("(%d, %d) ", (int)groups[i].x, (int)groups[i].y);
+      }
+   }
+   if (!marked.empty() && marked.size() > 1) {
+      for (i = 0; i < marked.size()-1; i++){
+         cv::line(img,
+            Point(points[marked[i]].x,
+               points[marked[i]].y),
+            Point(points[marked[i+1]].x,
+               points[marked[i+1]].y),
+            Scalar(40, 255, 40),
+            5);
+      }
+   }
+      
 }

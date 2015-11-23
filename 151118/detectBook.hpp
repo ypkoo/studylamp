@@ -34,11 +34,10 @@ class DetectBook{
 		vector<Mat> binaryList;
 		Rect bRect;
 		void produceBinaries();
-		int findBiggestContour(vector<vector<Point> > contours);
 		
-		Point RotatePoint(const cv::Point2f& p, float rad);
+		Point RotatePoint(const Point2f& p, float rad);
 		Point RotatePoint(Point cen_pt, Point p, float rad);
-		void rotate(Mat src, double angle, cv::Mat& dst);
+		void rotate(Mat src, double angle, Mat& dst);
 
 		float distanceP2P(Point a, Point b);
 };

@@ -2,4 +2,7 @@
 #export PKG_CONFIG_PATH
 
 all:
-	g++ -o studyLamp main.cpp trackFinger.cpp gesture.cpp imageView.cpp detectBook.cpp -llept -ltesseract `pkg-config --cflags --libs opencv` 
+	g++ -o studyLamp main.cpp gesture.cpp imageView.cpp detector.cpp -llept -ltesseract `pkg-config --cflags --libs opencv` $(FLAG)
+debug:
+	g++ -o studyLamp main.cpp gesture.cpp imageView.cpp detector.cpp -llept -ltesseract `pkg-config --cflags --libs opencv` $(FLAG)
+debug: FLAG=-DNDEBUG

@@ -18,27 +18,28 @@ TrackFinger::TrackFinger() {
 	c_lower[2] = 3;
 	c_upper[2] = 255;
 
-#ifdef DEBUG
-	    namedWindow("trackbars", CV_WINDOW_AUTOSIZE);
-	    resizeWindow("trackbars", 1004, 50);
-		createTrackbar("S_lower", "trackbars", &c_lower[1],255);
-		createTrackbar("L_lower", "trackbars", &c_lower[2],255);
-		createTrackbar("H_upper", "trackbars", &c_upper[0],255);
-	  	createTrackbar("S_upper", "trackbars", &c_upper[1],255);
-		createTrackbar("H_lower", "trackbars", &c_lower[0],255);
-		createTrackbar("L_upper", "trackbars", &c_upper[2],255);
-#endif
+// #ifdef DEBUG
+//     namedWindow("trackbars", CV_WINDOW_AUTOSIZE);
+//     resizeWindow("trackbars", 1004, 50);
+// 	createTrackbar("S_lower", "trackbars", &c_lower[1],255);
+// 	createTrackbar("L_lower", "trackbars", &c_lower[2],255);
+// 	createTrackbar("H_upper", "trackbars", &c_upper[0],255);
+//   	createTrackbar("S_upper", "trackbars", &c_upper[1],255);
+// 	createTrackbar("H_lower", "trackbars", &c_lower[0],255);
+// 	createTrackbar("L_upper", "trackbars", &c_upper[2],255);
+// #endif
 }
 
-void TrackFinger::produceBinaries(Mat original, Mat& binary) {
-	Scalar lowerBound = Scalar(c_lower[0] , c_lower[1], c_lower[2]);
-	Scalar upperBound = Scalar(c_upper[0] , c_upper[1], c_upper[2]);
+void TrackFinger::produceBinaries(const Mat original, Mat& binary, Scalar lowerBound, Scalar upperBound) {
+	//Scalar lowerBound = Scalar(c_lower[0] , c_lower[1], c_lower[2]);
+	//Scalar upperBound = Scalar(c_upper[0] , c_upper[1], c_upper[2]);
 
 	pyrDown(original, binary);
 	blur(binary, binary, Size(3,3));
 	cvtColor(binary, binary, CV_BGR2HLS);
 	inRange(binary, lowerBound, upperBound, binary);
 	medianBlur(binary, binary, 7);
+	bitwise_not(binary, binary);
 	pyrUp(binary, binary);
 }
 
@@ -79,7 +80,7 @@ void TrackFinger::findStippest(vector<Point> cHull, Point& stippest) {
 Point TrackFinger::getFingerPoint(Mat frame) {
 	Mat original, binary;
 	pyrDown(frame, original);
-	produceBinaries(original, binary);
+	produceBinaries(original, binary, Scalar(c_lower[0] , c_lower[1], c_lower[2]),  Scalar(c_upper[0] , c_upper[1], c_upper[2]));
 
 	vector<vector<Point> > contours;
 	Mat _binary = binary.clone();
@@ -92,7 +93,6 @@ Point TrackFinger::getFingerPoint(Mat frame) {
 	if(i != -1) {
 		convexHull(Mat(contours[i]), cHull[i], false, true);
 		approxPolyDP(Mat(cHull[i]), cHull[i], 15, true);
-
 		findStippest(cHull[i], stippest);
 	
 #ifdef DEBUG

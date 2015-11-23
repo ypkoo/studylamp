@@ -1,5 +1,5 @@
-#ifndef _TRACK_FINGER_HPP_
-#define _TRACK_FINGER_HPP_
+#ifndef _DETECTOR_HPP_
+#define _DETECTOR_HPP_
 
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
@@ -14,18 +14,17 @@
 using namespace cv;
 using namespace std;
 
-class TrackFinger{
+class Detector{
 	public:
-		TrackFinger();
-		Point getFingerPoint(Mat frame);
+		Detector();
+		void detectBook(Mat frame, Mat& dst, int& pageNum);
+		Point detectTip(Mat frame);
 
 	private:
-		int c_lower[3];
-		int c_upper[3];
 		float getAngle(Point s, Point f, Point e);
 		int findBiggestContour(vector<vector<Point> > contours);
-		void findStippest(vector<Point> cHull, Point& stippest);
-		void produceBinaries(Mat original, Mat& binary, Scalar lowerBound, Scalar upperBound);
+		void findStippest(vector<Point> polygon, Point& stippest);
+		void produceBinaries(Mat frame, Mat& dst, Scalar lowerBound, Scalar upperBound);
 };
 
 #endif

@@ -14,8 +14,7 @@
 #include <vector>
 #include <cmath>
 #include "main.hpp"
-#include "trackFinger.hpp"
-#include "detectBook.hpp"
+#include "detector.hpp"
 #include "gesture.hpp"
 #include "camera.hpp"
 
@@ -47,16 +46,11 @@ int main(int argc, char **argv){
 	Camera cam(camera_num);
 	Mat frame;
 
-	TrackFinger tf;
+	Detector dtct;
 	Gesture gest;
-	DetectBook db;
 
 #ifdef _WIN32
 	Messenger msg("127.0.0.1", 6974);
-#endif
-
-#ifdef DEBUG
-
 #endif
 
 	unsigned int tick;
@@ -66,12 +60,17 @@ int main(int argc, char **argv){
 		tick = getTick();
 
 		cam.getImage(frame);
-		db.setImage(frame);
-		frame = db.cropBook();
-		int pageNum = db.getPageNum();
+		Mat reducedFrame;
+		pyrDown(frame, reducedFrame);
 
-		Point v = tf.getFingerPoint(frame);
-		res = gest.registerPoint(frame.cols-v.x, v.y, tick);
+		int pageNum;
+		dtct.detectBook(reducedFrame, reducedFrame, pageNum);
+
+		Point v = dtct.detectTip(reducedFrame);
+		cout << tick << " " << v << endl;
+		res = gest.registerPoint(v.x, v.y, tick);
+		gest.visualize(reducedFrame);
+		imshow("ddd", reducedFrame);
 
 #ifdef _WIN32
 		if (res.type == gesture::V_TYPE)
@@ -79,12 +78,6 @@ int main(int argc, char **argv){
 		else
 			msg.send_message ("%d;%d;%d;%d;%d", v.x, v.y, -1, -1, 69);
 #endif
-
-#ifdef DEBUG
-		//imshow("Original", frame);
-#endif
-		cout << v << endl;
-
   		if(cv::waitKey(30) == char('q')) break;
 	}
 	destroyAllWindows();

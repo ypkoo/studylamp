@@ -11,6 +11,7 @@
 
 using namespace cv;
 using namespace std;
+using namespace tesseract;
 
 tesseract::TessBaseAPI *api;
 
@@ -18,7 +19,7 @@ DetectBook::DetectBook() {
 	pageNum = -1;
 
 	api = new tesseract::TessBaseAPI();
-	api->SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
+	api->SetPageSegMode(PSM_SINGLE_BLOCK);
 	if (api->Init(NULL, "eng")) {
 		fprintf(stderr, "Could not initialize tesseract.\n");
 		exit(1);
@@ -47,24 +48,12 @@ void DetectBook::produceBinaries() {
 	medianBlur(binary, binary,7);
 }
 
-int DetectBook::findBiggestContour(vector<vector<Point> > contours) {
-    int indexOfBiggestContour = -1;
-    int sizeOfBiggestContour = 0;
-    for (int i = 0; i < contours.size(); i++){
-        if(contours[i].size() > sizeOfBiggestContour){
-            sizeOfBiggestContour = contours[i].size();
-            indexOfBiggestContour = i;
-        }
-    }
-    return indexOfBiggestContour;
-}
-
 float DetectBook::distanceP2P(Point a, Point b){
 	float d= sqrt(fabs( pow(a.x-b.x,2) + pow(a.y-b.y,2) )) ;  
 	return d;
 }
 
-Point DetectBook::RotatePoint(const cv::Point2f& p, float rad)
+Point DetectBook::RotatePoint(const Point2f& p, float rad)
 {
     const float x = cos(rad) * p.x - sin(rad) * p.y;
     const float y = sin(rad) * p.x + cos(rad) * p.y;
@@ -82,11 +71,11 @@ Point DetectBook::RotatePoint(Point cen_pt, Point p, float rad)
     return fin_pt;
 }
 
-void DetectBook::rotate(Mat src, double angle, cv::Mat& dst)
+void DetectBook::rotate(Mat src, double angle, Mat& dst)
 {
     int len = max(src.cols, src.rows);
     Point pt(src.size().width/2., src.size().height/2.);
-    Mat r = cv::getRotationMatrix2D(pt, angle, 1.0);
+    Mat r = getRotationMatrix2D(pt, angle, 1.0);
 
     warpAffine(src, dst, r, src.size());
 }
@@ -192,8 +181,8 @@ int DetectBook::getPageNum(){
 	char *outText;
 	Mat sharpen, gray;
 	pyrUp(pageNumR, pageNumR);
-	cv::GaussianBlur(pageNumR, sharpen, cv::Size(0, 0), 3);
-	cv::addWeighted(pageNumR, 1.5, sharpen, -0.5, 0, sharpen);
+	GaussianBlur(pageNumR, sharpen, Size(0, 0), 3);
+	addWeighted(pageNumR, 1.5, sharpen, -0.5, 0, sharpen);
 
 	cvtColor(sharpen, gray, CV_BGR2GRAY);
 	
