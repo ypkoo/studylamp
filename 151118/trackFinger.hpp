@@ -16,21 +16,16 @@ using namespace std;
 
 class TrackFinger{
 	public:
-		TrackFinger(bool _debug = false);
-		Mat original;
-
-		Point getFingerPoint(Mat img);
+		TrackFinger();
+		Point getFingerPoint(Mat frame);
 
 	private:
-		bool debug;
 		int c_lower[3];
 		int c_upper[3];
-		Mat binary;
-		Rect bRect;
-		void visualize();
-		void produceBinaries();
-		int findBiggestContour(vector<vector<Point> > contours);
 		float getAngle(Point s, Point f, Point e);
+		int findBiggestContour(vector<vector<Point> > contours);
+		void findStippest(vector<Point> cHull, Point& stippest);
+		void produceBinaries(Mat original, Mat& binary);
 };
 
 #endif

@@ -15,9 +15,9 @@
 #include <cmath>
 #include "main.hpp"
 #include "trackFinger.hpp"
+#include "detectBook.hpp"
 #include "gesture.hpp"
 #include "camera.hpp"
-#include "imageView.hpp"
 
 #ifdef __APPLE__
 #include <sys/time.h>
@@ -43,30 +43,35 @@ int main(int argc, char **argv){
 	if (argc >= 2){
 		camera_num = argv[1][0]-'0';
 	}
-
 	cout << "camera number " << camera_num << endl;
+	Camera cam(camera_num);
+	Mat frame;
 
+	TrackFinger tf;
 	Gesture gest;
-	TrackFinger tf(true);
+	DetectBook db;
 
 #ifdef _WIN32
 	Messenger msg("127.0.0.1", 6974);
 #endif
 
-	Camera cam(camera_num);
-	ImageView iv_orig("original");
-	ImageView iv_trig("triggering");
+#ifdef DEBUG
 
-	Mat img;
+#endif
+
 	unsigned int tick;
 	gesture::result res;
 
 	for(;;){
 		tick = getTick();
-		cam.getImage(img);
 
-		Point v = tf.getFingerPoint(img);
-		res = gest.registerPoint(img.cols-v.x, v.y, tick);
+		cam.getImage(frame);
+		db.setImage(frame);
+		frame = db.cropBook();
+		int pageNum = db.getPageNum();
+
+		Point v = tf.getFingerPoint(frame);
+		res = gest.registerPoint(frame.cols-v.x, v.y, tick);
 
 #ifdef _WIN32
 		if (res.type == gesture::V_TYPE)
@@ -75,14 +80,11 @@ int main(int argc, char **argv){
 			msg.send_message ("%d;%d;%d;%d;%d", v.x, v.y, -1, -1, 69);
 #endif
 
+#ifdef DEBUG
+		//imshow("Original", frame);
+#endif
 		cout << v << endl;
 
-		iv_orig.showImage(img);
-
-		gest.visualize(img);
-		iv_trig.showImage(img);
-		
-		// showWindows(m);
   		if(cv::waitKey(30) == char('q')) break;
 	}
 	destroyAllWindows();

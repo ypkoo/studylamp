@@ -1,4 +1,5 @@
 #include "trackFinger.hpp"
+#include "main.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -9,8 +10,7 @@
 using namespace cv;
 using namespace std;
 
-TrackFinger::TrackFinger(bool _debug) {
-	debug = _debug;
+TrackFinger::TrackFinger() {
 	c_lower[0] = 9;
 	c_upper[0] = 255;
 	c_lower[1] = 104;
@@ -18,20 +18,19 @@ TrackFinger::TrackFinger(bool _debug) {
 	c_lower[2] = 3;
 	c_upper[2] = 255;
 
-	if (debug) {
-    	namedWindow("TrackingFingerResult", CV_WINDOW_AUTOSIZE);
+#ifdef DEBUG
 	    namedWindow("trackbars", CV_WINDOW_AUTOSIZE);
-	    resizeWindow("trackbars", 512, 50);
+	    resizeWindow("trackbars", 1004, 50);
 		createTrackbar("S_lower", "trackbars", &c_lower[1],255);
 		createTrackbar("L_lower", "trackbars", &c_lower[2],255);
 		createTrackbar("H_upper", "trackbars", &c_upper[0],255);
 	  	createTrackbar("S_upper", "trackbars", &c_upper[1],255);
 		createTrackbar("H_lower", "trackbars", &c_lower[0],255);
 		createTrackbar("L_upper", "trackbars", &c_upper[2],255);
-	}
+#endif
 }
 
-void TrackFinger::produceBinaries() {
+void TrackFinger::produceBinaries(Mat original, Mat& binary) {
 	Scalar lowerBound = Scalar(c_lower[0] , c_lower[1], c_lower[2]);
 	Scalar upperBound = Scalar(c_upper[0] , c_upper[1], c_upper[2]);
 
@@ -64,65 +63,55 @@ float TrackFinger::getAngle(Point s, Point f, Point e) {
 	return angle;
 }
 
-Point TrackFinger::getFingerPoint(Mat img) {
-	pyrDown(img, original);
-	produceBinaries();
-
-	vector<vector<Point> > contours;
-	Mat _binary;
-	binary.copyTo(_binary);
-	findContours(_binary, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-	vector<vector<Point> > hullP = vector<vector<Point> >(contours.size());
-	int cIdx = findBiggestContour(contours);
-
-	if(cIdx != -1) {
-		Mat biggest = Mat(contours[cIdx]);
-		convexHull(biggest, hullP[cIdx], false, true);
-		approxPolyDP(Mat(hullP[cIdx]), hullP[cIdx], 15, true);
-
-		vector<Point>::iterator d = hullP[cIdx].begin();
-		int c = 0;
-		Point x[100];
-	    while(d != hullP[cIdx].end())
-			x[c++] = (*d++);
-		
-		if (c >= 3) {
-			int sAngle = 360;
-			Point stippest;
-			for (int i=0; i<c; ++i) {
-				int angle = (int)getAngle(x[i], x[(i+1)%c], x[(i+2)%c]);
-				if (angle < sAngle) {
-					sAngle = angle;
-					stippest = x[(i+1)%c];
-				}
+void TrackFinger::findStippest(vector<Point> cHull, Point& stippest) {
+	int n = cHull.size();
+	float smallest = 360;
+	if (n >= 3)
+		for (int i=0; i<n; ++i) {
+			float angle = getAngle(cHull[i], cHull[(i+1)%n], cHull[(i+2)%n]);
+			if (angle < smallest) {
+				smallest = angle;
+				stippest = cHull[(i+1)%n];
 			}
-			
-			if (debug)
-			{
-				putText(original, "Stippest", stippest-Point(0,20), fontFace, 1.2f, Scalar(200,255,30), 2);
-				bRect = boundingRect(biggest);
-				rectangle(original, bRect.tl(), bRect.br(), Scalar(200,30,200));
-				drawContours(original, hullP, cIdx, Scalar(0,0,200), 2, 8, vector<Vec4i>(), 0, Point());
-		   		circle(original, stippest, 4, Scalar(200,255,3), 6);
-		   		visualize();
-		   	}
-	   		
-	   		return stippest * 2;
-   		}
-	}
-
-	return Point(-1, -1);
+		}
 }
 
-void TrackFinger::visualize() {
-	pyrDown(binary, binary);
-	pyrDown(binary, binary);
-	Rect roi(Point(3*original.cols/4, 0), binary.size());
-	vector<Mat> channels;
-	Mat result;
-	for(int i=0;i<3;i++)
-		channels.push_back(binary);
-	merge(channels, result);
-	result.copyTo(original(roi));
-	imshow("TrackingFingerResult", original);	
+Point TrackFinger::getFingerPoint(Mat frame) {
+	Mat original, binary;
+	pyrDown(frame, original);
+	produceBinaries(original, binary);
+
+	vector<vector<Point> > contours;
+	Mat _binary = binary.clone();
+	findContours(_binary, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+
+	int i = findBiggestContour(contours);
+	vector<vector<Point> > cHull = vector<vector<Point> >(contours.size());
+
+	Point stippest = Point(-1, -1);
+	if(i != -1) {
+		convexHull(Mat(contours[i]), cHull[i], false, true);
+		approxPolyDP(Mat(cHull[i]), cHull[i], 15, true);
+
+		findStippest(cHull[i], stippest);
+	
+#ifdef DEBUG
+		if (stippest != Point(-1, -1)) {
+			drawContours(original, cHull, i, Scalar(0,0,200), 2, 8, vector<Vec4i>(), 0, Point());
+	   		circle(original, stippest, 4, Scalar(200,255,3), 6);
+		}
+		pyrDown(binary, binary);
+		pyrDown(binary, binary);
+		vector<Mat> channels;
+		Mat result;
+		for(int i=0;i<3;i++)
+			channels.push_back(binary);
+		merge(channels, result);
+		Rect roi(Point(0, 0), binary.size());
+		result.copyTo(original(roi));
+		imshow("TrackingFingerResult", original);
+#endif
+	}
+
+	return stippest * 2;
 }
