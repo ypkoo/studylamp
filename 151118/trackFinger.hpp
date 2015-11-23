@@ -3,13 +3,13 @@
 
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
-#include <vector>
-#include "main.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/types_c.h"
 #include "opencv2/highgui/highgui_c.h"
+#include <vector>
 
 #define fontFace FONT_HERSHEY_PLAIN
+#define PI 3.14159
 
 using namespace cv;
 using namespace std;
@@ -19,7 +19,6 @@ class TrackFinger{
 		TrackFinger(bool _debug = false);
 		Mat original;
 
-		void initThreshold();
 		Point getFingerPoint(Mat img);
 
 	private:

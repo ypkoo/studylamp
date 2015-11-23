@@ -9,12 +9,4 @@
 #include <iostream>
 #include <string>
 
-
-#define ORIGCOL2COL CV_BGR2HLS
-#define COL2ORIGCOL CV_HLS2BGR
-#define NSAMPLES 7
-#define PI 3.14159
-
-
-
 #endif

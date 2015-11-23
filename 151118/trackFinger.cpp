@@ -1,8 +1,4 @@
 #include "trackFinger.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/imgproc/types_c.h"
-#include "opencv2/highgui/highgui_c.h"
-#include <opencv2/opencv.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -15,18 +11,15 @@ using namespace std;
 
 TrackFinger::TrackFinger(bool _debug) {
 	debug = _debug;
-	if (debug) 
-    	namedWindow("img1", CV_WINDOW_AUTOSIZE);
-}
-
-void TrackFinger::initThreshold() {
 	c_lower[0] = 9;
 	c_upper[0] = 255;
 	c_lower[1] = 104;
 	c_upper[1] = 255;
 	c_lower[2] = 3;
 	c_upper[2] = 255;
+
 	if (debug) {
+    	namedWindow("TrackingFingerResult", CV_WINDOW_AUTOSIZE);
 	    namedWindow("trackbars", CV_WINDOW_AUTOSIZE);
 	    resizeWindow("trackbars", 512, 50);
 		createTrackbar("S_lower", "trackbars", &c_lower[1],255);
@@ -72,8 +65,7 @@ float TrackFinger::getAngle(Point s, Point f, Point e) {
 }
 
 Point TrackFinger::getFingerPoint(Mat img) {
-	flip(img, original, 1);
-	pyrDown(original, original);
+	pyrDown(img, original);
 	produceBinaries();
 
 	vector<vector<Point> > contours;
@@ -115,7 +107,7 @@ Point TrackFinger::getFingerPoint(Mat img) {
 		   		visualize();
 		   	}
 	   		
-	   		return stippest;
+	   		return stippest * 2;
    		}
 	}
 
@@ -132,5 +124,5 @@ void TrackFinger::visualize() {
 		channels.push_back(binary);
 	merge(channels, result);
 	result.copyTo(original(roi));
-	imshow("img1", original);	
+	imshow("TrackingFingerResult", original);	
 }

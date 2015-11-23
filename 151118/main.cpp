@@ -48,7 +48,6 @@ int main(int argc, char **argv){
 
 	Gesture gest;
 	TrackFinger tf(true);
-	tf.initThreshold();
 
 #ifdef _WIN32
 	Messenger msg("127.0.0.1", 6974);
@@ -76,7 +75,7 @@ int main(int argc, char **argv){
 			msg.send_message ("%d;%d;%d;%d;%d", v.x, v.y, -1, -1, 69);
 #endif
 
-		cout<<v<<endl;
+		cout << v << endl;
 
 		iv_orig.showImage(img);
 

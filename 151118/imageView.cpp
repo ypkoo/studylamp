@@ -17,10 +17,5 @@ name(_name){
 }
 
 void ImageView::showImage(Mat& img) {
-	if (width < img.cols || height < img.rows) {
-		width = max(width, img.cols);
-		height = max(height, img.rows);
-		resizeWindow(name, width, height);
-	}
 	imshow(name, img);
 }
