@@ -17,7 +17,7 @@ using namespace std;
 class Detector{
 	public:
 		Detector();
-		void detectBook(Mat frame, Mat& dst, int& pageNum);
+		void detectBook(Mat frame, Mat& dst, Mat& pageImg);
 		Point detectTip(Mat frame);
 
 	private:

@@ -66,8 +66,9 @@ Point Detector::RotatePoint(const Point2f& p, float rad)
 {
     const float x = cos(rad) * p.x - sin(rad) * p.y;
     const float y = sin(rad) * p.x + cos(rad) * p.y;
-
     Point rot_p(x, y);
+    if (x < 0) rot_p.x = 0;
+    if (y < 0) rot_p.y = 0;
     return rot_p;
 }
 
@@ -90,14 +91,13 @@ void Detector::rotate(Mat src, double angle, Mat& dst)
 }
 
 
-void Detector::detectBook(Mat frame, Mat& dst, int& pageNum){
+void Detector::detectBook(Mat frame, Mat& dst, Mat& pageImg){
 	Mat reduced, contrast, _contrast;
 	pyrDown(frame, reduced);
 	reduced.convertTo(contrast, -1, 2, 0);
 	pyrDown(contrast, _contrast);
 	Mat binary, binary2;
 
-	// inRange(_contrast, Scalar(c_lower[0], c_lower[1], c_lower[2]), Scalar(c_upper[0], c_upper[1], c_upper[2]), binary);
 	inRange(_contrast, Scalar(-72,-192,-74), Scalar(207,206,400), binary);
 	inRange(_contrast, Scalar(71,33,-154), Scalar(214,246,339), binary2);
 	binary += binary2;
@@ -122,67 +122,68 @@ void Detector::detectBook(Mat frame, Mat& dst, int& pageNum){
 		//Rect bRect = boundingRect(Mat(contours[i]));
 		//mask(Rect(bRect.x+5, bRect.y+5, bRect.width-10, bRect.height-10)) = 1;
 		reduced.copyTo(dst, mask);
+
+		vector<Point>::iterator d = cHull[i].begin();
+		Point leftP_1, leftP_2, rightP_1, rightP_2;
+		leftP_1.x = contrast.size().width;
+		leftP_2.x = contrast.size().width;
+		while(d != cHull[i].end()){
+			if (leftP_1.x > (*d).x)
+			{
+				leftP_2 = leftP_1;
+				leftP_1 = (*d);
+			}else if(leftP_2.x > (*d).x){
+				leftP_2 = (*d);
+			}else{
+				
+			}
+			if (rightP_1.x < (*d).x)
+			{
+				rightP_2 = rightP_1;
+				rightP_1 = (*d);
+			}else if(rightP_2.x < (*d).x){
+				rightP_2 = (*d);
+			}
+
+			(*d++);
+		}
+		Point leftTopP, leftBotP, rightTopP, rightBotP;
+		if (leftP_1.y < leftP_2.y)
+		{
+			leftTopP = leftP_1;
+			leftBotP = leftP_2;
+		}else{
+			leftTopP = leftP_2;
+			leftBotP = leftP_1;
+		}
+		if (rightP_1.y < rightP_2.y)
+		{
+			rightTopP = rightP_1;
+			rightBotP = rightP_2;
+		}else{
+			rightTopP = rightP_2;
+			rightBotP = rightP_1;
+		}
+		float angle = acos((float)(rightBotP.x-leftBotP.x)/(float)distanceP2P(leftBotP, rightBotP));
+		if (leftBotP.y < rightBotP.y)
+			angle = -angle;
+
+		Mat rotatedSrc;
+		rotate(frame, -angle*180/PI, rotatedSrc);
+		Point rotatedRightBotP = RotatePoint(Point(contrast.size().width/2., contrast.size().height/2.), rightBotP, angle);
+		Point rotatedLeftBotP = RotatePoint(Point(contrast.size().width/2., contrast.size().height/2.), leftBotP, angle);
+		rotatedRightBotP = rotatedRightBotP * 2;
+		rotatedLeftBotP = rotatedLeftBotP * 2;
+		pageImg = rotatedSrc(Rect(rotatedRightBotP.x-80, rotatedRightBotP.y-50, 80, 70)).clone();
+		//Mat pageNumL = rotatedSrc(Rect(rotatedLeftBotP.x, rotatedLeftBotP.y-50, 100, 70)).clone();
+
+		Mat sharpen;
+		pyrUp(pageImg, pageImg);
+		GaussianBlur(pageImg, sharpen, Size(0, 0), 3);
+		addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
+		cvtColor(sharpen, pageImg, CV_BGR2GRAY);
+		//imshow("img3", pageImg);
 	}
-
-	// vector<Point>::iterator d = cHull[i].begin();
-	// Point leftP_1, leftP_2, rightP_1, rightP_2;
-	// leftP_1.x = contrast.size().width;
-	// leftP_2.x = contrast.size().width;
-	// while(d != cHull[i].end()){
-	// 	if (leftP_1.x > (*d).x)
-	// 	{
-	// 		leftP_2 = leftP_1;
-	// 		leftP_1 = (*d);
-	// 	}else if(leftP_2.x > (*d).x){
-	// 		leftP_2 = (*d);
-	// 	}else{
-			
-	// 	}
-	// 	if (rightP_1.x < (*d).x)
-	// 	{
-	// 		rightP_2 = rightP_1;
-	// 		rightP_1 = (*d);
-	// 	}else if(rightP_2.x < (*d).x){
-	// 		rightP_2 = (*d);
-	// 	}
-
-	// 	(*d++);
-	// }
-	// Point leftTopP, leftBotP, rightTopP, rightBotP;
-	// if (leftP_1.y < leftP_2.y)
-	// {
-	// 	leftTopP = leftP_1;
-	// 	leftBotP = leftP_2;
-	// }else{
-	// 	leftTopP = leftP_2;
-	// 	leftBotP = leftP_1;
-	// }
-	// if (rightP_1.y < rightP_2.y)
-	// {
-	// 	rightTopP = rightP_1;
-	// 	rightBotP = rightP_2;
-	// }else{
-	// 	rightTopP = rightP_2;
-	// 	rightBotP = rightP_1;
-	// }
-	// cout << "leftTopP " << leftTopP <<" leftBotP "<< leftBotP << " rightTopP " << rightTopP << " rightBotP " << rightBotP << endl;
-	// float angle = acos((float)(rightBotP.x-leftBotP.x)/(float)distanceP2P(leftBotP, rightBotP));
-	// if (leftBotP.y < rightBotP.y)
-	// {
-	// 	angle = -angle;
-	// }
-
-	// // cout << "angle: " << angle*180/PI << endl;
-	// Mat rotatedSrc;
-	// rotate(frame, -angle*180/PI, rotatedSrc);
-	// Point rotatedRightBotP = RotatePoint(Point(contrast.size().width/2., contrast.size().height/2.), rightBotP, angle);
-	// Point rotatedLeftBotP = RotatePoint(Point(contrast.size().width/2., contrast.size().height/2.), leftBotP, angle);
-	// rotatedRightBotP = rotatedRightBotP*4;
-	// rotatedLeftBotP = rotatedLeftBotP*4;
-	// Mat pageNumR = rotatedSrc(Rect(rotatedRightBotP.x-80, rotatedRightBotP.y-50, 80, 70)).clone();
-	// Mat pageNumL = rotatedSrc(Rect(rotatedLeftBotP.x, rotatedLeftBotP.y-50, 100, 70)).clone();
-
-	// imshow("img3", pageNumL);
 }
 
 Point Detector::detectTip(Mat frame) {
@@ -209,8 +210,8 @@ Point Detector::detectTip(Mat frame) {
 		approxPolyDP(Mat(cHull[i]), cHull[i], 15, true);
 		findStippest(cHull[i], stippest);
 
-	Mat mask(frame.size(), CV_8U, Scalar::all(0));
-	fillConvexPoly(mask, &cHull[i][0], cHull[i].size(), 255, 8, 0);
+		Mat mask(frame.size(), CV_8U, Scalar::all(0));
+		fillConvexPoly(mask, &cHull[i][0], cHull[i].size(), 255, 8, 0);
 	
 #ifdef DEBUG
 		if (stippest != Point(-1, -1)) {
