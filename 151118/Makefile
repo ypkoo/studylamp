@@ -7,4 +7,8 @@ ifeq (DEBUG, 1)
 endif
 
 all:
-	g++ -o studyLamp main.cpp trackFinger.cpp gesture.cpp imageView.cpp  `pkg-config --cflags --libs opencv` $(CFLAGS)
+	g++ -o studyLamp main.cpp gesture.cpp detector.cpp -llept -ltesseract `pkg-config --cflags --libs opencv` $(FLAG)
+debug:
+	g++ -o studyLamp main.cpp gesture.cpp detector.cpp -llept -ltesseract `pkg-config --cflags --libs opencv` $(FLAG)
+debug: FLAG=-DNDEBUG
+

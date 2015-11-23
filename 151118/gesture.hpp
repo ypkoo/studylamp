@@ -29,12 +29,12 @@ namespace gesture{
 	const size_t POINT_COUNT = 1000000;
 	// const size_t GROUP_COUNT = 100;
 
-	const uint32_t SIZE_LIMIT_SQUARE = 400;
+	const uint32_t SIZE_LIMIT_SQUARE = 200;
 	// const uint32_t NEW_GROUP_TIME = 800; // Is it really needed?
 	const uint32_t TIME_TO_GROUP = 500; // the group object is complete or not
 	const uint32_t TIME_TO_MOTION = 1000;
 
-	const float epsilon = 40.0;
+	const float epsilon = 10.0;
 
 	struct timePoint{
 		uint32_t x;
@@ -78,17 +78,6 @@ namespace gesture{
 			};
 		};
 	};
-
-/*
-	enum _status{
-		// points are grouping...
-		STATUS_GROUPING,
-
-		// points finish grouping and points are going to be collected for recognize motion
-		// within TIME_TO_MOTION milliseconds.
-		STATUS_COLLECTING
-	};
-*/
 }
 
 class Gesture

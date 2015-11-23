@@ -237,5 +237,4 @@ void Gesture::visualize (Mat& img) {
 				5);
 		}
 	}
-		
 }

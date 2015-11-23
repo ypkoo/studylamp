@@ -9,4 +9,6 @@
 #include <iostream>
 #include <string>
 
+#define DEBUG
+
 #endif

@@ -1,6 +1,6 @@
 @ECHO OFF
 SET OPENCV_DIR=C:\opencv\
-SET CPP_FILES=main.cpp gesture.cpp messenger.cpp trackFinger.cpp imageView.cpp
+SET CPP_FILES=main.cpp gesture.cpp messenger.cpp trackFinger.cpp detector.cpp
 SET LIB_PATH=%OPENCV_DIR%build\x86\vc12\staticlib
 SET WINDOW_LIBS=gdi32.lib User32.lib Advapi32.lib comdlg32.lib Ole32.lib vfw32.lib comctl32.lib OleAut32.lib Ws2_32.lib
 
