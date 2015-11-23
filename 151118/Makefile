@@ -2,4 +2,4 @@
 #export PKG_CONFIG_PATH
 
 all:
-	g++ -o opencv main.cpp roi.cpp trackFinger.cpp `pkg-config —cflags —libs opencv`
+	g++ -o opencv main.cpp trackFinger.cpp gesture.cpp `pkg-config —cflags —libs opencv`

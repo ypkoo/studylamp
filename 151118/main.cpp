@@ -71,7 +71,7 @@ int main(int argc, char **argv){
 
 #ifdef _WIN32
 		if (res.type == gesture::V_TYPE)
-			msg.send_message ("%d;%d;%d;%d;%d", v.x, v.y, res.V2.x, res.V2.y, 74);
+			msg.send_message ("%d;%d;%d;%d;%d", v.x, v.y, res.V2_x, res.V2_y, 74);
 		else
 			msg.send_message ("%d;%d;%d;%d;%d", v.x, v.y, -1, -1, 69);
 #endif

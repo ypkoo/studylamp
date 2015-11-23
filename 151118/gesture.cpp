@@ -97,9 +97,12 @@ result Gesture::registerPoint(uint32_t x, uint32_t y, uint32_t t)
 	result res;
 	if (checked) {
 		res.type = V_TYPE;
-		res.V1 = Point(clusters[cindex-2].cx, clusters[cindex-2].cy);
-		res.V2 = Point(clusters[cindex-1].cx, clusters[cindex-1].cy);
-		res.V3 = Point(clusters[cindex].cx, clusters[cindex].cy);
+		res.V1_x = clusters[cindex-2].cx;
+		res.V1_y = clusters[cindex-2].cy;
+		res.V2_x = clusters[cindex-1].cx;
+		res.V2_y = clusters[cindex-1].cy;
+		res.V3_x = clusters[cindex].cx;
+		res.V3_y = clusters[cindex].cy;
 	} else {
 		res.type = NO_TYPE;
 	}

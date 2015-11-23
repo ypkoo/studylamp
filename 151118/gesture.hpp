@@ -54,13 +54,18 @@ namespace gesture{
 		enum result_type type;
 		union {
 			struct {
-				Point V1;
-				Point V2;
-				Point V3;
+				unsigned int V1_x;
+				unsigned int V1_y;
+				unsigned int V2_x;
+				unsigned int V2_y;
+				unsigned int V3_x;
+				unsigned int V3_y;
 			};
 			struct {
-				Point L1;
-				Point L2;
+				unsigned int L1_x;
+				unsigned int L1_y;
+				unsigned int L2_x;
+				unsigned int L2_y;
 			};
 		};
 	};
