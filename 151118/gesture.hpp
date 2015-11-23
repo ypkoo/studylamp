@@ -26,84 +26,74 @@
 using namespace cv;
 
 namespace gesture{
-   const size_t POINT_COUNT = 1000000;
-   // const size_t GROUP_COUNT = 100;
+	const size_t POINT_COUNT = 1000000;
+	// const size_t GROUP_COUNT = 100;
 
    const uint32_t SIZE_LIMIT_SQUARE = 250;
    // const uint32_t NEW_GROUP_TIME = 800; // Is it really needed?
    const uint32_t TIME_TO_GROUP = 500; // the group object is complete or not
    const uint32_t TIME_TO_MOTION = 1000;
 
-   const float epsilon = 10.0;
+	const float epsilon = 10.0;
 
-   struct timePoint{
-      uint32_t x;
-      uint32_t y;
-      uint32_t t; // milliseconds
-   };
+	struct timePoint{
+		uint32_t x;
+		uint32_t y;
+		uint32_t t; // milliseconds
+	};
 
-   struct group{
-      float x;
-      float y;
-      uint32_t duration; // if this is bigger than TIME_TO_GROUP, it means complete group.
+	struct group{
+		float x;
+		float y;
+		uint32_t duration; // if this is bigger than TIME_TO_GROUP, it means complete group.
 
-      size_t start;
-      size_t end;
-      size_t count; // same with end-start+1
+		size_t start;
+		size_t end;
+		size_t count; // same with end-start+1
 
-      uint32_t collect_time_limit; // only valid for completed group.
-   };
+		uint32_t collect_time_limit; // only valid for completed group.
+	};
 
-   enum result_type {
-      NO_TYPE,
-      V_TYPE,
-      LINELINE_TYPE
-   };
-   struct result {
-      enum result_type type;
-      union {
-         struct {
-            uint32_t V1_x;
-            uint32_t V1_y;
-            uint32_t V2_x;
-            uint32_t V2_y;
-            uint32_t V3_x;
-            uint32_t V3_y;
-         };
-         struct {
-            uint32_t L1_x;
-            uint32_t L1_y;
-            uint32_t L2_x;
-            uint32_t L2_y;
-         };
-      };
-   };
-
-/*
-   enum _status{
-      // points are grouping...
-      STATUS_GROUPING,
-
-      // points finish grouping and points are going to be collected for recognize motion
-      // within TIME_TO_MOTION milliseconds.
-      STATUS_COLLECTING
-   };
-*/
+	enum result_type {
+		NO_TYPE,
+		V_TYPE,
+		LINELINE_TYPE
+	};
+	struct result {
+		enum result_type type;
+		union {
+			struct {
+				uint32_t V1_x;
+				uint32_t V1_y;
+				uint32_t V2_x;
+				uint32_t V2_y;
+				uint32_t V3_x;
+				uint32_t V3_y;
+			};
+			struct {
+				uint32_t L1_x;
+				uint32_t L1_y;
+				uint32_t L2_x;
+				uint32_t L2_y;
+			};
+		};
+	};
 }
 
 class Gesture
 {
 private:
-   struct gesture::timePoint *points;
-   size_t p_index;
-   std::deque<struct gesture::group> groups;
+	struct gesture::timePoint *points;
+	size_t p_index;
+	std::deque<struct gesture::group> groups;
 	std::vector<size_t> marked;
-   void DouglasPecker(std::vector<size_t>&, size_t, size_t);
+
+	void DouglasPecker(std::vector<size_t>&, size_t, size_t);
 public:
-   Gesture();
-   ~Gesture();
-   gesture::result registerPoint (int32_t x, int32_t y, uint32_t t);
-   void visualize (Mat& img);
+	Gesture();
+	~Gesture();
+	gesture::result registerPoint (int32_t x, int32_t y, uint32_t t);
+	void visualize (Mat& img);
 };
 
 #endif
