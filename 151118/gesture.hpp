@@ -1,5 +1,5 @@
-#ifndef GESTURE_H
-#define GESTURE_H
+#ifndef _GESTURE_HPP_
+#define _GESTURE_HPP_
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgproc/types_c.h>
 #include <opencv2/highgui/highgui_c.h>
@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-namespace gest{
+using namespace cv;
+
+namespace gesture{
 	const size_t POINT_COUNT = 1000000;
 	const size_t CLUSTER_COUNT = 100;
 
@@ -42,27 +44,45 @@ namespace gest{
 
 		bool is_linear;
 	};
+
+	enum result_type {
+		NO_TYPE,
+		V_TYPE,
+		LINELINE_TYPE
+	};
+	struct result {
+		enum result_type type;
+		union {
+			struct {
+				Point V1;
+				Point V2;
+				Point V3;
+			};
+			struct {
+				Point L1;
+				Point L2;
+			};
+		};
+	};
 }
 
-using namespace cv;
-using namespace gest;
-
-class gesture
+class Gesture
 {
 private:
-	struct tp *points;
-	struct cluster *clusters;
-	struct line *lines;
+	struct gesture::tp *points;
+	struct gesture::cluster *clusters;
+	struct gesture::line *lines;
 
 	size_t pindex;
 	size_t cindex;
-public:
-	gesture();
-	void registerPoint (uint32_t x, uint32_t y, uint32_t t);
+
 	void clear (void);
 	void updateLine (size_t index);
-
-	void check (void);
+	bool check (void);
+public:
+	Gesture();
+	~Gesture();
+	gesture::result registerPoint (uint32_t x, uint32_t y, uint32_t t);
 	void visualize (Mat& img);
 };
 

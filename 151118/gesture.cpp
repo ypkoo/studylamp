@@ -3,11 +3,11 @@
 #include <string>
 #include <cmath>
 
-using namespace gest;
+using namespace gesture;
 using namespace cv;
 using namespace std;
 
-gesture::gesture()
+Gesture::Gesture()
 {
 	points = (struct tp *) malloc(sizeof(struct tp) * POINT_COUNT);
 	clusters = (struct cluster *) malloc(sizeof(struct cluster) * CLUSTER_COUNT);
@@ -16,7 +16,14 @@ gesture::gesture()
 	cindex = 0;
 }
 
-void gesture::registerPoint(uint32_t x, uint32_t y, uint32_t t)
+Gesture::~Gesture()
+{
+	free(points);
+	free(clusters);
+	free(lines);
+}
+
+result Gesture::registerPoint(uint32_t x, uint32_t y, uint32_t t)
 {
 	// if buffer becomes to be full, remove all clusters except the last three clusters.
 	if (pindex == POINT_COUNT - 2 || cindex == CLUSTER_COUNT - 2) {
@@ -24,6 +31,7 @@ void gesture::registerPoint(uint32_t x, uint32_t y, uint32_t t)
 		clear();
 	}
 
+	bool checked = false;
 	if (pindex > 0){
 		points[pindex].x = x;
 		points[pindex].y = y;
@@ -56,7 +64,7 @@ void gesture::registerPoint(uint32_t x, uint32_t y, uint32_t t)
 
 					if (clusters[cindex].duration > TIME_TO_CLUSTER && cindex > 0){
 						updateLine (cindex-1);
-						check ();
+						checked = check ();
 					}
 				} else { // so FAR
 					// already made cluster
@@ -83,10 +91,21 @@ void gesture::registerPoint(uint32_t x, uint32_t y, uint32_t t)
 		clusters[0].start = clusters[0].end = 0;
 		clusters[0].count = 1;
 	}
-	
+
 	pindex++;
+
+	result res;
+	if (checked) {
+		res.type = V_TYPE;
+		res.V1 = Point(clusters[cindex-2].cx, clusters[cindex-2].cy);
+		res.V2 = Point(clusters[cindex-1].cx, clusters[cindex-1].cy);
+		res.V3 = Point(clusters[cindex].cx, clusters[cindex].cy);
+	} else {
+		res.type = NO_TYPE;
+	}
+	return res;
 }
-void gesture::clear (void)
+void Gesture::clear (void)
 {
 	memset (points, 0, sizeof(struct tp) * POINT_COUNT);
 	memset (clusters, 0, sizeof(struct cluster) * CLUSTER_COUNT);
@@ -94,7 +113,7 @@ void gesture::clear (void)
 	cindex = pindex = 0;
 }
 
-void gesture::updateLine (size_t index)
+void Gesture::updateLine (size_t index)
 {
 	struct line *line = &lines[index];
 
@@ -156,7 +175,7 @@ void gesture::updateLine (size_t index)
 	// line->error = sqrt ((float)sum / (float) ((to->start-from->end-1)*(line->a * line->a + line->b * line->b)));
 }
 
-void gesture::check (void) {
+bool Gesture::check (void) {
 	// cout << "check " << lines[cindex-2].slope << ", " 
 	// << lines[cindex-1].slope << endl;
 	if (cindex > 1
@@ -168,10 +187,12 @@ void gesture::check (void) {
 			<< clusters[cindex-1].cx << ", "
 			<< clusters[cindex-1].cy << ")" << endl;
 		clear();
+		return true;
 	}
+	return false;
 }
 
-void gesture::visualize (Mat& img) {
+void Gesture::visualize (Mat& img) {
 	size_t i;
 	for (i = 0; i < cindex; i++){
 		if (clusters[i].duration > TIME_TO_CLUSTER) {
