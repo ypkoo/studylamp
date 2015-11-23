@@ -66,7 +66,7 @@ int main(int argc, char **argv){
 		cam.getImage(img);
 
 		Point v = tf.getFingerPoint(img);
-		res = gest.registerPoint(img.cols-v.x, v.y, tick);
+		res = gest.registerPoint(v.x, v.y, tick);
 
 #ifdef _WIN32
 		if (res.type == gesture::V_TYPE)
@@ -74,12 +74,11 @@ int main(int argc, char **argv){
 		else
 			msg.send_message ("%d;%d;%d;%d;%d", v.x, v.y, -1, -1, 69);
 #endif
-
-		cout << v << endl;
+		// cout << v << endl;
 
 		iv_orig.showImage(img);
 
-		gest.visualize(img);
+		//gest.visualize(img);
 		iv_trig.showImage(img);
 		
 		// showWindows(m);

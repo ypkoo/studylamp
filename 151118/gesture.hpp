@@ -1,3 +1,18 @@
+// gesture.hpp
+// 
+// Header file for Gesture class
+// Analyze continuous points set
+// 
+// @author S.H.Lee
+// 
+// @version 1.1
+// @since 2015-11-23
+// Modified code for more natural recognition.
+//
+// @version 1.0
+// @since 2015-11-19
+// First implementation
+
 #ifndef _GESTURE_HPP_
 #define _GESTURE_HPP_
 #include <opencv2/imgproc/imgproc.hpp>
@@ -6,43 +21,37 @@
 #include <opencv2/opencv.hpp>
 #include <stdlib.h>
 #include <stdint.h>
+#include <deque>
 
 using namespace cv;
 
 namespace gesture{
 	const size_t POINT_COUNT = 1000000;
-	const size_t CLUSTER_COUNT = 100;
+	// const size_t GROUP_COUNT = 100;
 
 	const uint32_t SIZE_LIMIT_SQUARE = 400;
-	const uint32_t TIME_LIMIT = 800;
-	const uint32_t TIME_TO_CLUSTER = 500;
+	// const uint32_t NEW_GROUP_TIME = 800; // Is it really needed?
+	const uint32_t TIME_TO_GROUP = 500; // the group object is complete or not
+	const uint32_t TIME_TO_MOTION = 1000;
 
-	struct tp{
+	const float epsilon = 40.0;
+
+	struct timePoint{
 		uint32_t x;
 		uint32_t y;
 		uint32_t t; // milliseconds
 	};
 
-	struct cluster{
-		float cx;
-		float cy;
-		uint32_t duration;
+	struct group{
+		float x;
+		float y;
+		uint32_t duration; // if this is bigger than TIME_TO_GROUP, it means complete group.
 
-		uint32_t start;
-		uint32_t end;
-		uint32_t count; // same with end - start + 1
-	};
+		size_t start;
+		size_t end;
+		size_t count; // same with end-start+1
 
-	struct line{
-		float a;
-		float b;
-		float c;
-
-		float slope;
-		float length;
-		float duration;
-
-		bool is_linear;
+		uint32_t collect_time_limit; // only valid for completed group.
 	};
 
 	enum result_type {
@@ -54,40 +63,47 @@ namespace gesture{
 		enum result_type type;
 		union {
 			struct {
-				unsigned int V1_x;
-				unsigned int V1_y;
-				unsigned int V2_x;
-				unsigned int V2_y;
-				unsigned int V3_x;
-				unsigned int V3_y;
+				uint32_t V1_x;
+				uint32_t V1_y;
+				uint32_t V2_x;
+				uint32_t V2_y;
+				uint32_t V3_x;
+				uint32_t V3_y;
 			};
 			struct {
-				unsigned int L1_x;
-				unsigned int L1_y;
-				unsigned int L2_x;
-				unsigned int L2_y;
+				uint32_t L1_x;
+				uint32_t L1_y;
+				uint32_t L2_x;
+				uint32_t L2_y;
 			};
 		};
 	};
+
+/*
+	enum _status{
+		// points are grouping...
+		STATUS_GROUPING,
+
+		// points finish grouping and points are going to be collected for recognize motion
+		// within TIME_TO_MOTION milliseconds.
+		STATUS_COLLECTING
+	};
+*/
 }
 
 class Gesture
 {
 private:
-	struct gesture::tp *points;
-	struct gesture::cluster *clusters;
-	struct gesture::line *lines;
+	struct gesture::timePoint *points;
+	size_t p_index;
+	std::deque<struct gesture::group> groups;
+	std::vector<size_t> marked;
 
-	size_t pindex;
-	size_t cindex;
-
-	void clear (void);
-	void updateLine (size_t index);
-	bool check (void);
+	void DouglasPecker(std::vector<size_t>&, size_t, size_t);
 public:
 	Gesture();
 	~Gesture();
-	gesture::result registerPoint (uint32_t x, uint32_t y, uint32_t t);
+	gesture::result registerPoint (int32_t x, int32_t y, uint32_t t);
 	void visualize (Mat& img);
 };
 
