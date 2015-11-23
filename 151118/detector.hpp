@@ -25,6 +25,11 @@ class Detector{
 		int findBiggestContour(vector<vector<Point> > contours);
 		void findStippest(vector<Point> polygon, Point& stippest);
 		void produceBinaries(Mat frame, Mat& dst, Scalar lowerBound, Scalar upperBound);
+		
+		Point RotatePoint(const Point2f& p, float rad);
+		Point RotatePoint(Point cen_pt, Point p, float rad);
+		void rotate(Mat src, double angle, Mat& dst);
+		float distanceP2P(Point a, Point b);
 };
 
 #endif

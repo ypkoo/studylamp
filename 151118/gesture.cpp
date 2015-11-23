@@ -157,8 +157,8 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
       for (index = groups.size()-1; index != -1; index--) {
          cur = &groups[index];
          if (cur->duration > TIME_TO_GROUP && t >= cur->collect_time_limit) {
-            points[cur->end].x = (uint32_t) cur->x;
-            points[cur->end].y = (uint32_t) cur->y;
+            // points[cur->end].x = (uint32_t) cur->x;
+            // points[cur->end].y = (uint32_t) cur->y;
 
             // recursive call of DouglasPecker
             marked.clear();

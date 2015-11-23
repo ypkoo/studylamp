@@ -29,7 +29,7 @@ namespace gesture{
    const size_t POINT_COUNT = 1000000;
    // const size_t GROUP_COUNT = 100;
 
-   const uint32_t SIZE_LIMIT_SQUARE = 400;
+   const uint32_t SIZE_LIMIT_SQUARE = 250;
    // const uint32_t NEW_GROUP_TIME = 800; // Is it really needed?
    const uint32_t TIME_TO_GROUP = 500; // the group object is complete or not
    const uint32_t TIME_TO_MOTION = 1000;

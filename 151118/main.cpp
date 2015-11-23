@@ -64,13 +64,13 @@ int main(int argc, char **argv){
 		pyrDown(frame, reducedFrame);
 
 		int pageNum;
-		dtct.detectBook(reducedFrame, reducedFrame, pageNum);
+		dtct.detectBook(frame, frame, pageNum);
 
-		Point v = dtct.detectTip(reducedFrame);
+		Point v = dtct.detectTip(frame);
 		cout << tick << " " << v << endl;
 		res = gest.registerPoint(v.x, v.y, tick);
-		gest.visualize(reducedFrame);
-		imshow("ddd", reducedFrame);
+		gest.visualize(frame);
+		imshow("ddd", frame);
 
 #ifdef _WIN32
 		if (res.type == gesture::V_TYPE)
