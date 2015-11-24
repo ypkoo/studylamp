@@ -1,3 +1,6 @@
+#include <tesseract/baseapi.h>
+#include <leptonica/allheaders.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #include "messenger.hpp"
@@ -59,22 +62,37 @@ int main(int argc, char **argv){
 
 	unsigned int tick;
 	gesture::result res;
+	tesseract::TessBaseAPI *api;
+
+	api = new tesseract::TessBaseAPI();
+	api->SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
+	if (api->Init(NULL, "eng")) {
+		fprintf(stderr, "Could not initialize tesseract.\n");
+		exit(1);
+	}
 
 	for(;;){
 		tick = getTick();
 
 		cam.getImage(frame);
 		Mat reducedFrame;
+		Mat pageImg;
 		pyrDown(frame, reducedFrame);
 
-		int pageNum;
-		dtct.detectBook(frame, frame, pageNum);
+		dtct.detectBook(frame, frame, pageImg);
+	
+		api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
+		char *outText = api->GetUTF8Text();
+		int tempPageNum = atoi(outText);
+		//if (tempPageNum>0) pageNum = tempPageNum;
+		printf("OCR output:%s\n", outText);
+		cout << "page number is: " << atoi(outText) << endl;
+		delete [] outText;
 
 		Point v = dtct.detectTip(frame);
-		// cout << tick << " " << v << endl;
 		res = gest.registerPoint(v.x, v.y, tick);
-		gest.visualize(frame);
-		imshow("ddd", frame);
+		//gest.visualize(frame);
+		imshow("ddd", pageImg);
 
 #ifdef _WIN32
 		if (res.type == gesture::V_TYPE)
