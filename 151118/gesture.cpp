@@ -22,10 +22,15 @@ using namespace gesture;
 using namespace cv;
 using namespace std;
 
-Gesture::Gesture() : groups()
+Gesture::Gesture(uint32_t w, uint32_t h) : groups()
 {
+
 	points = (struct timePoint *) malloc(sizeof(struct timePoint) * POINT_COUNT);
 	p_index = 0;
+
+	GROUP_SIZE_LIMIT_SQUARE = h*h/(120 * 120);
+	GROUP_DETAILED_SIZE_LIMIT_SQUARE = h*h/(150 * 150);
+	EPSILON = h/200.0;
 }
 
 Gesture::~Gesture()
@@ -54,7 +59,7 @@ void Gesture::DouglasPecker(std::vector<size_t>& _marked, size_t front, size_t e
 		}
 	}
 
-	if (dmax > epsilon) {
+	if (dmax > EPSILON) {
 		if (index != front && index != end)
 			_marked.push_back(index);
 		if (index - front > 1)
@@ -99,12 +104,23 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 			//cout << count << end_gp->x << ""endl;
 			float xdiff = end_gp->x - x;
 			float ydiff = end_gp->y - y;
-			if (xdiff * xdiff + ydiff * ydiff < SIZE_LIMIT_SQUARE) {
-				end_gp->x = ((end_gp->x*count)+x)/(count+1);
-				end_gp->y = ((end_gp->y*count)+y)/(count+1);
-				end_gp->duration +=  t-points[p_index-1].t;
-				end_gp->count++;
-				end_gp->collect_time_limit = t + TIME_TO_MOTION;
+			if (xdiff * xdiff + ydiff * ydiff < GROUP_SIZE_LIMIT_SQUARE) {
+				if (end_gp->duration < TIME_TO_GROUP) {
+					end_gp->x = ((end_gp->x*count)+x)/(count+1);
+					end_gp->y = ((end_gp->y*count)+y)/(count+1);
+					end_gp->duration +=  t-points[end_gp->end].t;
+					end_gp->end = p_index;
+					end_gp->count++;
+					end_gp->collect_time_limit = t + TIME_TO_MOTION;
+				}
+				else if (xdiff*xdiff + ydiff*ydiff < GROUP_DETAILED_SIZE_LIMIT_SQUARE){
+					end_gp->x += ((float) (x-points[end_gp->start].x))/count;
+					end_gp->y += ((float) (y-points[end_gp->start].y))/count;
+					end_gp->duration = TIME_TO_GROUP;
+					end_gp->start++;
+					end_gp->end++;
+					end_gp->collect_time_limit = t + TIME_TO_MOTION;
+				}
 			} else { // so far
 				// if group is not completed, delete and make new group.
 				if (end_gp->duration < TIME_TO_GROUP) {
@@ -156,7 +172,7 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 	if (!groups.empty()) {
 		for (index = groups.size()-1; index != -1; index--) {
 			cur = &groups[index];
-			if (cur->duration > TIME_TO_GROUP && t >= cur->collect_time_limit) {
+			if (cur->duration >= TIME_TO_GROUP && t >= cur->collect_time_limit) {
 				// points[cur->end].x = (uint32_t) cur->x;
 				// points[cur->end].y = (uint32_t) cur->y;
 
@@ -170,11 +186,11 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 				// analyze marked.
 				sort(marked.begin(), marked.end());
 
-				printf("gesture.cpp: analyzed. size %u:\n", marked.size());
-				int i;
-				for (i = 0; i<marked.size(); i++) {
-					printf("[%u]: (%d, %d)\n", marked[i], points[marked[i]].x, points[marked[i]].y);
-				}
+				// printf("gesture.cpp: analyzed. size %u:\n", marked.size());
+				// int i;
+				// for (i = 0; i<marked.size(); i++) {
+				// 	printf("[%u]: (%d, %d)\n", marked[i], points[marked[i]].x, points[marked[i]].y);
+				// }
 
 				float x[4];
 				float y[4];
@@ -185,11 +201,13 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 					y[tmp] = (float) points[marked[tmp]].y;
 				}
 				// v case. 0.5 through 3
+				cout << "analyzing... ";
 				if (marked.size() >= 3 && x[1] != x[0] && x[2] != x[1]) {
 					float slope1 = (y[0]-y[1])/(x[0]-x[1]);
 					float slope2 = (y[1]-y[2])/(x[1]-x[2]);
-					if (-0.5 > slope1 && slope1 > -3
-						&& 0.5 < slope2 && slope2 < 3) {
+					printf("slope %f %f\n", slope1, slope2);
+					if (4 > slope1 && slope1 > 0.3
+						&& -4 < slope2 && slope2 < -0.3) {
 						res.type = V_TYPE;
 						res.V1_x = x[0];
 						res.V1_y = y[0];
@@ -219,7 +237,7 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 void Gesture::visualize (Mat& img) {
 	size_t i;
 	for (i = 0; i < groups.size(); i++){
-		if (groups[i].duration > TIME_TO_GROUP) {
+		if (groups[i].duration >= TIME_TO_GROUP) {
 			circle(img,
 				Point(groups[i].x, groups[i].y),
 				8, Scalar(255, 0, 0), CV_FILLED);
@@ -233,7 +251,7 @@ void Gesture::visualize (Mat& img) {
 					points[marked[i]].y),
 				Point(points[marked[i+1]].x,
 					points[marked[i+1]].y),
-				Scalar(40, 255, 40),
+				Scalar(40, 255, 125),
 				5);
 		}
 	}

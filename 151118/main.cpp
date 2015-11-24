@@ -42,12 +42,16 @@ int main(int argc, char **argv){
 	if (argc >= 2){
 		camera_num = argv[1][0]-'0';
 	}
-	cout << "camera number " << camera_num << endl;
 	Camera cam(camera_num);
+	cam.cap.set(CV_CAP_PROP_FRAME_WIDTH, 10000);
+	cam.cap.set(CV_CAP_PROP_FRAME_HEIGHT, 10000);
+	uint32_t cam_width = (uint32_t) cam.cap.get(CV_CAP_PROP_FRAME_WIDTH);
+	uint32_t cam_height = (uint32_t) cam.cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+	cout << "camera number " << camera_num << " with width=" << cam_width << " and height=" << cam_height<< endl;
 	Mat frame;
 
 	Detector dtct;
-	Gesture gest;
+	Gesture gest(cam_width, cam_height);
 
 #ifdef _WIN32
 	Messenger msg("127.0.0.1", 6974);
@@ -67,7 +71,7 @@ int main(int argc, char **argv){
 		dtct.detectBook(frame, frame, pageNum);
 
 		Point v = dtct.detectTip(frame);
-		cout << tick << " " << v << endl;
+		// cout << tick << " " << v << endl;
 		res = gest.registerPoint(v.x, v.y, tick);
 		gest.visualize(frame);
 		imshow("ddd", frame);

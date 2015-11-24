@@ -29,12 +29,9 @@ namespace gesture{
 	const size_t POINT_COUNT = 1000000;
 	// const size_t GROUP_COUNT = 100;
 
-   const uint32_t SIZE_LIMIT_SQUARE = 250;
-   // const uint32_t NEW_GROUP_TIME = 800; // Is it really needed?
-   const uint32_t TIME_TO_GROUP = 500; // the group object is complete or not
-   const uint32_t TIME_TO_MOTION = 1000;
-
-	const float epsilon = 10.0;
+	// const uint32_t NEW_GROUP_TIME = 800; // Is it really needed?
+	const uint32_t TIME_TO_GROUP = 800; // the group object is complete or not
+	const uint32_t TIME_TO_MOTION = 1000;
 
 	struct timePoint{
 		uint32_t x;
@@ -88,9 +85,13 @@ private:
 	std::deque<struct gesture::group> groups;
 	std::vector<size_t> marked;
 
+	uint32_t GROUP_SIZE_LIMIT_SQUARE;
+	uint32_t GROUP_DETAILED_SIZE_LIMIT_SQUARE;
+	float EPSILON;
+
 	void DouglasPecker(std::vector<size_t>&, size_t, size_t);
 public:
-	Gesture();
+	Gesture(uint32_t width, uint32_t height);
 	~Gesture();
 	gesture::result registerPoint (int32_t x, int32_t y, uint32_t t);
 	void visualize (Mat& img);
