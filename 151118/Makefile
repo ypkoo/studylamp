@@ -1,14 +1,16 @@
 #PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}
 #export PKG_CONFIG_PATH
 
-DEBUG ?= 1
-ifeq (DEBUG, 1)
-    CFLAGS=-DDEBUG
+CC = g++
+MYFLAG = -llept -ltesseract `pkg-config --cflags --libs opencv`
+ifeq ($(DEBUG), 0)
+MYFLAG += -DNDEBUG
+else
+MYFLAG += -DDEBUG
 endif
 
-all:
-	g++ -o studyLamp main.cpp gesture.cpp detector.cpp -llept -ltesseract `pkg-config --cflags --libs opencv` $(FLAG)
-debug:
-	g++ -o studyLamp main.cpp gesture.cpp detector.cpp -llept -ltesseract `pkg-config --cflags --libs opencv` $(FLAG)
-debug: FLAG=-DNDEBUG
+SRCS = main.cpp gesture.cpp detector.cpp
+TARGET = studyLamp
 
+all:
+	$(CC) -o $(TARGET) $(SRCS) $(MYFLAG)

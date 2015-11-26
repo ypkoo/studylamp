@@ -5,6 +5,10 @@
 // 
 // @author S.H.Lee
 // 
+// @version 1.2
+// @since 2015-11-26
+// Strengthen visualize()
+//
 // @version 1.1
 // @since 2015-11-23
 // Modified code for more natural recognition.
@@ -22,6 +26,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <deque>
+#include <queue>
+#include <vector>
 
 using namespace cv;
 
@@ -32,6 +38,13 @@ namespace gesture{
 	// const uint32_t NEW_GROUP_TIME = 800; // Is it really needed?
 	const uint32_t TIME_TO_GROUP = 800; // the group object is complete or not
 	const uint32_t TIME_TO_MOTION = 1000;
+
+#ifdef DEBUG
+	#define HISTORY_MAX_COUNT 10
+	const uint32_t HISTORY_VECTOR_SIZE = 20;
+	const Scalar HISTORY_COLOR(40, 255, 125);
+	const uint32_t HISTORY_HOLDING_TICK = 1500;
+#endif
 
 	struct timePoint{
 		uint32_t x;
@@ -89,12 +102,18 @@ private:
 	uint32_t GROUP_DETAILED_SIZE_LIMIT_SQUARE;
 	float EPSILON;
 
-	void DouglasPecker(std::vector<size_t>&, size_t, size_t);
+#ifdef DEBUG
+	size_t *history_vectors[HISTORY_MAX_COUNT];
+	uint32_t *history_ticks;
+	uint32_t history_count;
+#endif
+
+	void DouglasPeucker(std::vector<size_t>&, size_t, size_t);
 public:
 	Gesture(uint32_t width, uint32_t height);
 	~Gesture();
 	gesture::result registerPoint (int32_t x, int32_t y, uint32_t t);
-	void visualize (Mat& img);
+	void visualize (Mat& img, uint32_t tick);
 };
 
 #endif
