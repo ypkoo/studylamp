@@ -170,10 +170,10 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 				// analyze marked.
 				sort(marked.begin(), marked.end());
 
-				printf("gesture.cpp: analyzed. size %u:\n", marked.size());
+				printf("gesture.cpp: analyzed. size %lu:\n", marked.size());
 				int i;
 				for (i = 0; i<marked.size(); i++) {
-					printf("[%u]: (%d, %d)\n", marked[i], points[marked[i]].x, points[marked[i]].y);
+					printf("[%lu]: (%d, %d)\n", marked[i], points[marked[i]].x, points[marked[i]].y);
 				}
 
 				float x[4];

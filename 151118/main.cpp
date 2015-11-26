@@ -1,11 +1,10 @@
-#include <tesseract/baseapi.h>
-#include <leptonica/allheaders.h>
-
 #ifdef _WIN32
 #include <windows.h>
 #include "messenger.hpp"
 #endif
 
+#include <tesseract/baseapi.h>
+#include <leptonica/allheaders.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgproc/types_c.h>
 #include <opencv2/highgui/highgui_c.h>
@@ -40,26 +39,23 @@ unsigned int getTick(void) {
 	return tick;
 }
 
-int main(int argc, char **argv){
+int main(int argc, char **argv) {
 	int camera_num = 0;
-	if (argc >= 2){
+	if (argc >= 2) {
 		camera_num = argv[1][0]-'0';
 	}
 	cout << "camera number " << camera_num << endl;
 	Camera cam(camera_num);
-	Mat frame;
-
 	Detector dtct;
 	Gesture gest;
+	unsigned int tick;
+	gesture::result res;
 
 #ifdef _WIN32
 	Messenger msg("127.0.0.1", 6974);
 #endif
 
-	unsigned int tick;
-	gesture::result res;
 	tesseract::TessBaseAPI *api;
-
 	api = new tesseract::TessBaseAPI();
 	api->SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
 	if (api->Init(NULL, "eng")) {
@@ -67,28 +63,27 @@ int main(int argc, char **argv){
 		exit(1);
 	}
 
-	for(;;){
+	Mat frame;
+	for(;;) {
 		tick = getTick();
 
 		cam.getImage(frame);
-		Mat reducedFrame;
-		Mat pageImg;
-		pyrDown(frame, reducedFrame);
+		pyrDown(frame, frame);
 
-		dtct.detectBook(frame, frame, pageImg);
+		Mat bookImg, pageImg;
+		dtct.detectBook(frame, bookImg, pageImg);
 	
 		api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
 		char *outText = api->GetUTF8Text();
-		int tempPageNum = atoi(outText);
-		//if (tempPageNum>0) pageNum = tempPageNum;
-		printf("OCR output:%s\n", outText);
-		cout << "page number is: " << atoi(outText) << endl;
+		cout << outText << endl;
 		delete [] outText;
 
-		Point v = dtct.detectTip(frame);
+		Point v = dtct.detectTip(bookImg);
 		res = gest.registerPoint(v.x, v.y, tick);
-		//gest.visualize(frame);
-		imshow("ddd", pageImg);
+#ifdef DEBUG
+		gest.visualize(bookImg);
+#endif
+		//imshow("Original", frame);
 
 #ifdef _WIN32
 		if (res.type == gesture::V_TYPE)
