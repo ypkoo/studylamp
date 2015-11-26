@@ -22,6 +22,8 @@
 #include <sys/time.h>
 #endif
 
+#include <tesseract/baseapi.h>
+#include <leptonica/allheaders.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -72,16 +74,16 @@ int main(int argc, char **argv){
 		printf("Camera number %d, (w, h) = (%d, %d)\n", dev_num, cam_width, cam_height);
 	}
 
-	Mat frame;
 	Detector dtct;
 	Gesture gest(cam_width, cam_height);
+	unsigned int tick;
+	gesture::result res;
 
 #ifdef _WIN32
 	Messenger msg("127.0.0.1", 6974);
 #endif
-	gesture::result res;
-	tesseract::TessBaseAPI *api;
 
+	tesseract::TessBaseAPI *api;
 	api = new tesseract::TessBaseAPI();
 	api->SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
 	if (api->Init(NULL, "eng")) {
@@ -89,28 +91,26 @@ int main(int argc, char **argv){
 		return -1;
 	}
 
-	unsigned int tick;
+	Mat frame;
 	for(;;){
 		tick = getTick(); // Get time.
 		VC >> frame;      // Get current image.
-		Mat reducedFrame;
-		Mat pageImg;
-		pyrDown(frame, reducedFrame);
+		pyrDown(frame, frame);
 
-		// dtct.detectBook(frame, frame, pageImg);
+		Mat bookImg, pageImg;
+		dtct.detectBook(frame, bookImg, pageImg);
 	
-		// api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
-		// char *outText = api->GetUTF8Text();
-		// int tempPageNum = atoi(outText);
-		// // if (tempPageNum>0) pageNum = tempPageNum;
-		// printf("OCR output:%s\n", outText);
-		// cout << "page number is: " << atoi(outText) << endl;
-		// delete [] outText;
+		api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
+		char *outText = api->GetUTF8Text();
+		cout << outText << endl;
+		delete [] outText;
 
-		Point v = dtct.detectTip(frame);
+		Point v = dtct.detectTip(bookImg);
 		res = gest.registerPoint(v.x, v.y, tick);
-		gest.visualize(frame, tick);
-		imshow("ddd", frame);
+#ifdef DEBUG
+		gest.visualize(bookImg, tick);
+#endif
+		//imshow("Original", frame);
 
 #ifdef _WIN32
 		if (res.type == gesture::V_TYPE)

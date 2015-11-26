@@ -1,3 +1,15 @@
+/**
+ * detector.cpp
+ *
+ * Detector class, detect a book and a pen tip from an image
+ *
+ * @author Seunghyo Kang, Jongchan Park
+ *
+ * @version 1.0
+ * @since 2015-11-23
+ * First implementation
+ */
+
 #include "detector.hpp"
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,16 +22,6 @@ using namespace cv;
 using namespace std;
 
 Detector::Detector() {}
-
-void Detector::produceBinaries(Mat src, Mat& dst, Scalar lowerBound, Scalar upperBound) {
-	pyrDown(src, dst);
-	blur(dst, dst, Size(3,3));
-	cvtColor(dst, dst, CV_BGR2HLS);
-	inRange(dst, lowerBound, upperBound, dst);
-	medianBlur(dst, dst, 7);
-	bitwise_not(dst, dst);
-	pyrUp(dst, dst);
-}
 
 int Detector::findBiggestContour(vector<vector<Point> > contours) {
     int indexOfBiggestContour = -1;
@@ -37,9 +39,7 @@ float Detector::getAngle(Point s, Point f, Point e) {
 	float l1 = sqrt(pow(f.x-s.x,2) + pow(f.y-s.y,2));
 	float l2 = sqrt(pow(f.x-e.x,2) + pow(f.y-e.y,2));
 	float dot = (s.x-f.x)*(e.x-f.x) + (s.y-f.y)*(e.y-f.y);
-	float angle = acos(dot/(l1*l2));
-	angle = angle * 180/PI;
-	return angle;
+	return acos(dot/(l1*l2));
 }
 
 void Detector::findStippest(vector<Point> polygon, Point& stippest) {
@@ -56,13 +56,7 @@ void Detector::findStippest(vector<Point> polygon, Point& stippest) {
 	}
 }
 
-float Detector::distanceP2P(Point a, Point b){
-	float d= sqrt(fabs( pow(a.x-b.x,2) + pow(a.y-b.y,2) )) ;  
-	return d;
-}
-
-Point Detector::RotatePoint(const Point2f& p, float rad)
-{
+Point Detector::RotatePoint(const Point2f& p, float rad) {
     const float x = cos(rad) * p.x - sin(rad) * p.y;
     const float y = sin(rad) * p.x + cos(rad) * p.y;
     Point rot_p(x, y);
@@ -71,17 +65,14 @@ Point Detector::RotatePoint(const Point2f& p, float rad)
     return rot_p;
 }
 
-Point Detector::RotatePoint(Point cen_pt, Point p, float rad)
-{
+Point Detector::RotatePoint(Point cen_pt, Point p, float rad) {
     Point trans_pt = p - cen_pt;
     Point rot_pt   = RotatePoint(trans_pt, rad);
     Point fin_pt   = rot_pt + cen_pt;
-
     return fin_pt;
 }
 
-void Detector::rotate(Mat src, double angle, Mat& dst)
-{
+void Detector::rotate(Mat src, double angle, Mat& dst) {
     int len = max(src.cols, src.rows);
     Point pt(src.size().width/2., src.size().height/2.);
     Mat r = getRotationMatrix2D(pt, angle, 1.0);
@@ -90,21 +81,20 @@ void Detector::rotate(Mat src, double angle, Mat& dst)
 }
 
 
-void Detector::detectBook(Mat frame, Mat& dst, Mat& pageImg){
+void Detector::detectBook(Mat frame, Mat& bookImg, Mat& pageImg) {
 	Mat reduced, contrast, _contrast;
 	pyrDown(frame, reduced);
 	reduced.convertTo(contrast, -1, 2, 0);
 	pyrDown(contrast, _contrast);
-	Mat binary, binary2;
 
+	Mat binary, binary2;
+	cvtColor(_contrast, _contrast, CV_BGR2HLS);
 	inRange(_contrast, Scalar(-72,-192,-74), Scalar(207,206,400), binary);
 	inRange(_contrast, Scalar(71,33,-154), Scalar(214,246,339), binary2);
 	binary += binary2;
 	medianBlur(binary, binary, 7);
 	bitwise_not(binary, binary);
 	pyrUp(binary, binary);
-
-	dst = Mat(reduced.size(), CV_8UC3, Scalar(214,186,149));
 	
 	vector<vector<Point> > contours;
 	Mat _binary = binary.clone();
@@ -116,11 +106,13 @@ void Detector::detectBook(Mat frame, Mat& dst, Mat& pageImg){
 		convexHull(Mat(contours[i]), cHull[i], false, true);
 		approxPolyDP(Mat(cHull[i]), cHull[i], 15, true);
 
-		Mat mask(reduced.size(), CV_8U, Scalar::all(0));
-		fillConvexPoly(mask, &cHull[i][0], cHull[i].size(), 255, 8, 0);
 		//Rect bRect = boundingRect(Mat(contours[i]));
+		Mat mask(reduced.size(), CV_8U, Scalar::all(0));
 		//mask(Rect(bRect.x+5, bRect.y+5, bRect.width-10, bRect.height-10)) = 1;
-		reduced.copyTo(dst, mask);
+		fillConvexPoly(mask, &cHull[i][0], cHull[i].size(), 255, 8, 0);
+		bookImg = Mat(reduced.size(), CV_8UC3, Scalar(214,186,149));
+		reduced.copyTo(bookImg, mask);
+		//bookImg = bookImg(Rect(bRect.x+5, bRect.y+5, bRect.width-10, bRect.height-10));
 
 		vector<Point>::iterator d = cHull[i].begin();
 		Point leftP_1, leftP_2, rightP_1, rightP_2;
@@ -163,38 +155,37 @@ void Detector::detectBook(Mat frame, Mat& dst, Mat& pageImg){
 			rightTopP = rightP_2;
 			rightBotP = rightP_1;
 		}
-		float angle = acos((float)(rightBotP.x-leftBotP.x)/(float)distanceP2P(leftBotP, rightBotP));
-		if (leftBotP.y < rightBotP.y)
-			angle = -angle;
+		float angle = getAngle(rightBotP, leftBotP, Point(rightBotP.x, leftBotP.y));
+		if (leftBotP.y < rightBotP.y) angle = -angle;
 
-		Mat rotatedSrc;
-		rotate(frame, -angle*180/PI, rotatedSrc);
+		Mat rotated;
+
+		rotate(frame, -angle, rotated);
 		Point rotatedRightBotP = RotatePoint(Point(contrast.size().width/2., contrast.size().height/2.), rightBotP, angle);
 		Point rotatedLeftBotP = RotatePoint(Point(contrast.size().width/2., contrast.size().height/2.), leftBotP, angle);
-		rotatedRightBotP = rotatedRightBotP * 2;
-		rotatedLeftBotP = rotatedLeftBotP * 2;
-		pageImg = rotatedSrc(Rect(rotatedRightBotP.x-80, rotatedRightBotP.y-50, 80, 70)).clone();
-		//Mat pageNumL = rotatedSrc(Rect(rotatedLeftBotP.x, rotatedLeftBotP.y-50, 100, 70)).clone();
+		//rotatedRightBotP = rotatedRightBotP * 2;
+		//rotatedLeftBotP = rotatedLeftBotP * 2;
+		pageImg = rotated(Rect(rotatedRightBotP.x-80, rotatedRightBotP.y-50, 80, 50)).clone();
 
 		Mat sharpen;
 		pyrUp(pageImg, pageImg);
 		GaussianBlur(pageImg, sharpen, Size(0, 0), 3);
 		addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
 		cvtColor(sharpen, pageImg, CV_BGR2GRAY);
-		//imshow("img3", pageImg);
+#ifdef DEBUG
+		imshow("Book image", bookImg);
+		imshow("Page number image", pageImg);
+#endif
 	}
 }
 
 Point Detector::detectTip(Mat frame) {
-	Mat reduced, binary;
-	pyrDown(frame, reduced);
+	Mat binary;
 	blur(frame, binary, Size(3,3));
 	cvtColor(binary, binary, CV_BGR2HLS);
-	//inRange(binary, Scalar(c_lower[0], c_lower[1], c_lower[2]), Scalar(c_upper[0], c_upper[1], c_upper[2]), binary);
 	inRange(binary, Scalar(9, 104, 3), Scalar(255, 255, 255), binary);
 	medianBlur(binary, binary, 3);
 	bitwise_not(binary, binary);
-	//pyrUp(binary, binary);
 
 	vector<vector<Point> > contours;
 	Mat _binary = binary.clone();
@@ -208,25 +199,25 @@ Point Detector::detectTip(Mat frame) {
 		convexHull(Mat(contours[i]), cHull[i], false, true);
 		approxPolyDP(Mat(cHull[i]), cHull[i], 15, true);
 		findStippest(cHull[i], stippest);
-
-		Mat mask(frame.size(), CV_8U, Scalar::all(0));
-		fillConvexPoly(mask, &cHull[i][0], cHull[i].size(), 255, 8, 0);
 	
 #ifdef DEBUG
+		Mat showFrame = frame.clone();
 		if (stippest != Point(-1, -1)) {
-			drawContours(frame, cHull, i, Scalar(0,0,200), 2, 8, vector<Vec4i>(), 0, Point());
-	   		circle(frame, stippest, 4, Scalar(200,255,3), 6);
+			drawContours(showFrame, cHull, i, Scalar(0,0,200), 2, 8, vector<Vec4i>(), 0, Point());
+	   		circle(showFrame, stippest, 4, Scalar(200,255,3), 6);
 		}
+		Mat mask(showFrame.size(), CV_8U, Scalar::all(0));
+		fillConvexPoly(mask, &cHull[i][0], cHull[i].size(), 255, 8, 0);
 		pyrDown(binary, binary);
 		pyrDown(binary, binary);
 		vector<Mat> channels;
 		Mat result;
-		for(int i=0;i<3;i++)
+		for(int i=0; i<3; ++i)
 			channels.push_back(binary);
 		merge(channels, result);
 		Rect roi(Point(0, 0), binary.size());
-		result.copyTo(frame(roi));
-		//imshow("img2", frame);
+		result.copyTo(showFrame(roi));
+		imshow("Detecting Tip", showFrame);
 #endif
 	}
 
