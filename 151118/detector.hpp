@@ -36,10 +36,9 @@ class Detector{
 		float getAngle(Point s, Point f, Point e);
 		int findBiggestContour(vector<vector<Point> > contours);
 		void findStippest(vector<Point> polygon, Point& stippest);
-		
-		Point RotatePoint(const Point2f& p, float rad);
-		Point RotatePoint(Point cen_pt, Point p, float rad);
-		void rotate(Mat src, double angle, Mat& dst);
+		void findBookRegion(vector<Point> cHull, vector<Point>& endPoints);
+		void rotate(Mat src, Point cen_pt, float width, float height, double angle, Mat& dst);
+		float distanceP2P(Point a, Point b);
 };
 
 #endif

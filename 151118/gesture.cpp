@@ -105,6 +105,11 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 	}
 	if (p_index == POINT_COUNT) {
 		cout << "gesture.cpp: points buffer are cleaned" << endl;
+#ifdef DEBUG
+		memset(history_vectors[0], 0, sizeof(size_t) * HISTORY_MAX_COUNT * HISTORY_VECTOR_SIZE);
+		memset(history_ticks, 0, sizeof(uint32_t) * HISTORY_MAX_COUNT);
+		history_count = 0;
+#endif
 		if (groups.size() == 0){
 			memset(points, 0, sizeof(struct timePoint)*(p_index-1));
 			p_index = 0;
@@ -117,11 +122,6 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 				groups[index].start -= first;
 				groups[index].end -= first;
 			}
-#ifdef DEBUG
-			memset(history_vectors[0], 0, sizeof(size_t) * HISTORY_MAX_COUNT * HISTORY_VECTOR_SIZE);
-			memset(history_ticks, 0, sizeof(uint32_t) * HISTORY_MAX_COUNT);
-			history_count = 0;
-#endif
 			p_index -= first;
 		}
 	}
@@ -135,8 +135,10 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 			//cout << count << end_gp->x << ""endl;
 			float xdiff = end_gp->x - x;
 			float ydiff = end_gp->y - y;
-			if (xdiff * xdiff + ydiff * ydiff < GROUP_SIZE_LIMIT_SQUARE) {
-				if (end_gp->duration < TIME_TO_GROUP) {
+			float diff = xdiff * xdiff + ydiff * ydiff;
+
+			if (end_gp->duration < TIME_TO_GROUP) { // If the last group does not complete yet,
+				if (diff < GROUP_SIZE_LIMIT_SQUARE) { // If near enough, just attach new point to group.
 					end_gp->x = ((end_gp->x*count)+x)/(count+1);
 					end_gp->y = ((end_gp->y*count)+y)/(count+1);
 					end_gp->duration +=  t-points[end_gp->end].t;
@@ -144,17 +146,7 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 					end_gp->count++;
 					end_gp->collect_time_limit = t + TIME_TO_MOTION;
 				}
-				else if (xdiff*xdiff + ydiff*ydiff < GROUP_DETAILED_SIZE_LIMIT_SQUARE){
-					end_gp->x += ((float) (x-points[end_gp->start].x))/count;
-					end_gp->y += ((float) (y-points[end_gp->start].y))/count;
-					end_gp->duration = TIME_TO_GROUP;
-					end_gp->start++;
-					end_gp->end++;
-					end_gp->collect_time_limit = t + TIME_TO_MOTION;
-				}
-			} else { // so far
-				// if group is not completed, delete and make new group.
-				if (end_gp->duration < TIME_TO_GROUP) {
+				else { // If so far, delete original group and make a new group.
 					end_gp->x = x;
 					end_gp->y = y;
 					end_gp->duration = 0;
@@ -162,8 +154,17 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 					end_gp->count = 1;
 					end_gp->collect_time_limit = 0; // it is not meaningful to set.
 				}
-				// else make new group.
-				else {
+			}
+			else { // If the last group was already complete,
+				if (diff < GROUP_DETAILED_SIZE_LIMIT_SQUARE) { // If near enough, just attach new point with dequeue.
+					end_gp->x += ((float)x-points[end_gp->start].x)/count;
+					end_gp->y += ((float)y-points[end_gp->start].y)/count;
+					// end_gp->duration = TIME_TO_GROUP;
+					end_gp->start++;
+					end_gp->end++;
+					end_gp->collect_time_limit = t + TIME_TO_MOTION;
+				}
+				else { // If so far, make a new group. (* ready to track following points)
 					struct group new_gp;
 					new_gp.x = x;
 					new_gp.y = y;
@@ -244,7 +245,7 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 				if (marked.size() >= 3 && x[1] != x[0] && x[2] != x[1]) {
 					float slope1 = (y[0]-y[1])/(x[0]-x[1]);
 					float slope2 = (y[1]-y[2])/(x[1]-x[2]);
-					printf("slope %f %f\n", slope1, slope2);
+					// printf("slope %f %f\n", slope1, slope2);
 					if (4 > slope1 && slope1 > 0.3
 						&& -4 < slope2 && slope2 < -0.3) {
 						res.type = V_TYPE;
@@ -276,13 +277,17 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 void Gesture::visualize (Mat& img, uint32_t tick) {
 	size_t i;
 	for (i = 0; i < groups.size(); i++){
+		// printf("G[%d] : %2d %3d,%3d ", i, groups[i].duration, (int)groups[i].x, (int)groups[i].y);
 		if (groups[i].duration >= TIME_TO_GROUP) {
+			// printf("go go");
 			circle(img,
-				Point(groups[i].x, groups[i].y),
+				Point((int)groups[i].x, (int)groups[i].y),
 				8, Scalar(255, 0, 0), CV_FILLED);
 			// printf("(%d, %d) ", (int)groups[i].x, (int)groups[i].y);
 		}
+		// printf("//");
 	}
+	// printf("\n");
 #ifdef DEBUG
 	size_t j, prev, cur;
 	size_t delete_count = 0;
@@ -294,11 +299,11 @@ void Gesture::visualize (Mat& img, uint32_t tick) {
 			delete_count++;
 			continue;
 		}
-		color = HISTORY_COLOR * ((float)(HISTORY_HOLDING_TICK-tick+his_tick)/HISTORY_HOLDING_TICK);
+		color = HISTORY_COLOR * (((float)(HISTORY_HOLDING_TICK-tick+his_tick))/HISTORY_HOLDING_TICK);
 		
 		j = 1;
 		prev = history_vectors[i][0];
-		while (j == 0 || history_vectors[i][j] != 0) {
+		while (history_vectors[i][j] != 0) {
 			cur = history_vectors[i][j];
 			cv::line(img,
 				Point(points[prev].x,
@@ -311,11 +316,11 @@ void Gesture::visualize (Mat& img, uint32_t tick) {
 			j++;
 		}
 	}
-	memmove(history_vectors[delete_count],
-		history_vectors[0],
+	memmove(history_vectors[0],
+		history_vectors[delete_count],
 		sizeof(size_t)*HISTORY_VECTOR_SIZE*(history_count-delete_count));
-	memmove(&history_ticks[delete_count],
-		&history_vectors[0],
+	memmove(&history_ticks[0],
+		&history_ticks[delete_count],
 		sizeof(size_t)*(history_count-delete_count));
 	history_count -= delete_count;
 #else

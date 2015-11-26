@@ -12,9 +12,6 @@
 // @since 2015-11-XX
 // First implementation
 
-#include <tesseract/baseapi.h>
-#include <leptonica/allheaders.h>
-
 #ifdef _WIN32
 #include <windows.h>
 #include "messenger.hpp"
@@ -60,15 +57,15 @@ int main(int argc, char **argv){
 
 	/* Initialize camera device */
 	VideoCapture VC(dev_num);
-	uint32_t cam_width, cam_height;
+	uint32_t cam_width = 0, cam_height = 0;
 	{
 		if (!VC.isOpened()) {
 			fprintf(stderr, "Failed to open device number with number %d\n", dev_num);
 			return -1;
 		}
 		/* Set size as big enough, to get maximum size */
-		VC.set(CV_CAP_PROP_FRAME_WIDTH, 800);
-		VC.set(CV_CAP_PROP_FRAME_HEIGHT, 400);
+		VC.set(CV_CAP_PROP_FRAME_WIDTH, 100000);
+		VC.set(CV_CAP_PROP_FRAME_HEIGHT, 100000);
 		cam_width = (uint32_t) VC.get(CV_CAP_PROP_FRAME_WIDTH);
 		cam_height = (uint32_t) VC.get(CV_CAP_PROP_FRAME_HEIGHT);
 		printf("Camera number %d, (w, h) = (%d, %d)\n", dev_num, cam_width, cam_height);
@@ -88,35 +85,44 @@ int main(int argc, char **argv){
 	api->SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
 	if (api->Init(NULL, "eng")) {
 		fprintf(stderr, "Could not initialize tesseract.\n");
-		return -1;
+		exit(1);
 	}
 
 	Mat frame;
-	for(;;){
-		tick = getTick(); // Get time.
-		VC >> frame;      // Get current image.
-		pyrDown(frame, frame);
+	VC>>frame;
+	imwrite("output.bmp", frame);
+	for(;;) {
+		tick = getTick();
+
+		VC >> frame;
+		//pyrDown(frame, frame);
 
 		Mat bookImg, pageImg;
 		dtct.detectBook(frame, bookImg, pageImg);
-	
 		api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
 		char *outText = api->GetUTF8Text();
-		cout << outText << endl;
-		delete [] outText;
+		cout << outText[0] << outText[1] << endl;
+		// delete [] outText;
 
 		Point v = dtct.detectTip(bookImg);
 		res = gest.registerPoint(v.x, v.y, tick);
 #ifdef DEBUG
-		gest.visualize(bookImg, tick);
+		Mat gestmat(bookImg);
+		gest.visualize(gestmat, tick);
+		circle(gestmat, v, 5, Scalar(0, 0, 255), CV_FILLED);
+		imshow("Gest", gestmat);
 #endif
-		//imshow("Original", frame);
+		// imshow("Original", bookImg);
 
 #ifdef _WIN32
 		if (res.type == gesture::V_TYPE)
-			msg.send_message ("%d;%d;%d;%d;%d", v.x, v.y, res.V2_x, res.V2_y, 74);
+			msg.send_message ("%d;%d;%d;%d;%d;%d;%d",
+				bookImg.cols, bookImg.rows,
+				v.x, v.y, res.V2_x, res.V2_y, 41);
 		else
-			msg.send_message ("%d;%d;%d;%d;%d", v.x, v.y, -1, -1, 69);
+			msg.send_message ("%d;%d;%d;%d;%d;%d;%d",
+				bookImg.cols, bookImg.rows,
+				v.x, v.y, -1, -1, 41);
 #endif
   		if(cv::waitKey(30) == char('q')) break;
 	}

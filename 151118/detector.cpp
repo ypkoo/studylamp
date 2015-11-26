@@ -38,8 +38,10 @@ int Detector::findBiggestContour(vector<vector<Point> > contours) {
 float Detector::getAngle(Point s, Point f, Point e) {
 	float l1 = sqrt(pow(f.x-s.x,2) + pow(f.y-s.y,2));
 	float l2 = sqrt(pow(f.x-e.x,2) + pow(f.y-e.y,2));
+	if (l1*l2 == 0)
+		return PI/2;
 	float dot = (s.x-f.x)*(e.x-f.x) + (s.y-f.y)*(e.y-f.y);
-	return acos(dot/(l1*l2));
+	return 180 * acos(dot/(l1*l2)) / PI;
 }
 
 void Detector::findStippest(vector<Point> polygon, Point& stippest) {
@@ -56,34 +58,69 @@ void Detector::findStippest(vector<Point> polygon, Point& stippest) {
 	}
 }
 
-Point Detector::RotatePoint(const Point2f& p, float rad) {
-    const float x = cos(rad) * p.x - sin(rad) * p.y;
-    const float y = sin(rad) * p.x + cos(rad) * p.y;
-    Point rot_p(x, y);
-    if (x < 0) rot_p.x = 0;
-    if (y < 0) rot_p.y = 0;
-    return rot_p;
+float Detector::distanceP2P(Point a, Point b) {
+	return (float)sqrt(pow(a.x-b.x,2) + pow(a.y-b.y,2));
 }
 
-Point Detector::RotatePoint(Point cen_pt, Point p, float rad) {
-    Point trans_pt = p - cen_pt;
-    Point rot_pt   = RotatePoint(trans_pt, rad);
-    Point fin_pt   = rot_pt + cen_pt;
-    return fin_pt;
+void Detector::rotate(Mat src, Point cen_pt, float width, float height, double angle, Mat& dst)
+{
+    Mat r = getRotationMatrix2D(cen_pt, angle, 1.0);
+    Mat dst_temp;
+    warpAffine(src, dst_temp, r, Size(width*abs(cos(angle))+height*abs(sin(angle)),width*abs(sin(angle))+height*abs(cos(angle))));
+    if(MIN(width, dst_temp.size().width-cen_pt.x) > 0 && MIN(height, dst_temp.size().height-cen_pt.y) > 0)
+	    dst = dst_temp(Rect(cen_pt.x, cen_pt.y, MIN(width, dst_temp.size().width-cen_pt.x), MIN(height, dst_temp.size().height-cen_pt.y))).clone();
+	else dst = dst_temp.clone();
 }
 
-void Detector::rotate(Mat src, double angle, Mat& dst) {
-    int len = max(src.cols, src.rows);
-    Point pt(src.size().width/2., src.size().height/2.);
-    Mat r = getRotationMatrix2D(pt, angle, 1.0);
+void Detector::findBookRegion(vector<Point> cHull, vector<Point>& endPoints) {
+	vector<Point>::iterator d = cHull.begin();
+	Point leftP_1(99999, 0);
+	Point leftP_2(99999, 0);
+	Point rightP_1(0, 0);
+	Point rightP_2(0, 0);
+	while(d != cHull.end()) {
+		Point p = *d++;
+		if (leftP_1.x > p.x) {
+			leftP_2 = leftP_1;
+			leftP_1 = p;
+		}
+		else if(leftP_2.x > p.x)
+			leftP_2 = p;
+		if (rightP_1.x < p.x) {
+			rightP_2 = rightP_1;
+			rightP_1 = p;
+		}
+		else if(rightP_2.x < p.x)
+			rightP_2 = p;
+	}
 
-    warpAffine(src, dst, r, src.size());
+	Point leftTopP, leftBotP, rightTopP, rightBotP;
+	if (leftP_1.y < leftP_2.y) {
+		leftTopP = leftP_1;
+		leftBotP = leftP_2;
+	}
+	else {
+		leftTopP = leftP_2;
+		leftBotP = leftP_1;
+	}
+	if (rightP_1.y < rightP_2.y) {
+		rightTopP = rightP_1;
+		rightBotP = rightP_2;
+	}
+	else {
+		rightTopP = rightP_2;
+		rightBotP = rightP_1;
+	}
+	endPoints.push_back(leftTopP);
+	endPoints.push_back(leftBotP);
+	endPoints.push_back(rightTopP);
+	endPoints.push_back(rightBotP);
 }
-
 
 void Detector::detectBook(Mat frame, Mat& bookImg, Mat& pageImg) {
 	Mat reduced, contrast, _contrast;
 	pyrDown(frame, reduced);
+	blur(reduced, contrast, Size(3,3));
 	reduced.convertTo(contrast, -1, 2, 0);
 	pyrDown(contrast, _contrast);
 
@@ -106,77 +143,52 @@ void Detector::detectBook(Mat frame, Mat& bookImg, Mat& pageImg) {
 		convexHull(Mat(contours[i]), cHull[i], false, true);
 		approxPolyDP(Mat(cHull[i]), cHull[i], 15, true);
 
-		//Rect bRect = boundingRect(Mat(contours[i]));
-		Mat mask(reduced.size(), CV_8U, Scalar::all(0));
-		//mask(Rect(bRect.x+5, bRect.y+5, bRect.width-10, bRect.height-10)) = 1;
+		vector<Point> rectP;
+		findBookRegion(cHull[i], rectP);
+		float angle = getAngle(rectP[3], rectP[1], Point(rectP[3].x, rectP[1].y));
+		if (rectP[1].y > rectP[3].y)
+			angle = -angle;
+
+		Point2f frameSize(reduced.size());
+		Mat mask(Size(frameSize), CV_8U, Scalar::all(0));
 		fillConvexPoly(mask, &cHull[i][0], cHull[i].size(), 255, 8, 0);
-		bookImg = Mat(reduced.size(), CV_8UC3, Scalar(214,186,149));
+		bookImg = Mat(Size(frameSize), CV_8UC3, Scalar(214,186,149));
 		reduced.copyTo(bookImg, mask);
-		//bookImg = bookImg(Rect(bRect.x+5, bRect.y+5, bRect.width-10, bRect.height-10));
+		Mat rot_mat = getRotationMatrix2D(frameSize/2, angle, 1.0);
+		Mat rotatedFrame, rotatedMask;
+		warpAffine(bookImg, rotatedFrame, rot_mat, Size(frameSize));
+		warpAffine(mask, rotatedMask, rot_mat, Size(frameSize));
+		Mat rotatedSrc = rotatedFrame(boundingRect(Mat(rotatedMask)));
+		imshow("book", rotatedSrc);
 
-		vector<Point>::iterator d = cHull[i].begin();
-		Point leftP_1, leftP_2, rightP_1, rightP_2;
-		leftP_1.x = contrast.size().width;
-		leftP_2.x = contrast.size().width;
-		while(d != cHull[i].end()){
-			if (leftP_1.x > (*d).x)
-			{
-				leftP_2 = leftP_1;
-				leftP_1 = (*d);
-			}else if(leftP_2.x > (*d).x){
-				leftP_2 = (*d);
-			}else{
-				
-			}
-			if (rightP_1.x < (*d).x)
-			{
-				rightP_2 = rightP_1;
-				rightP_1 = (*d);
-			}else if(rightP_2.x < (*d).x){
-				rightP_2 = (*d);
-			}
+		pyrUp(rotatedSrc, bookImg);
 
-			(*d++);
+		if (rotatedSrc.size().height > 30 && rotatedSrc.size().width > 30) {
+			pageImg = rotatedSrc(Rect(20, rotatedSrc.size().height-30, 50, 30));
+			Mat sharpen;
+			pyrUp(pageImg, pageImg);
+			GaussianBlur(pageImg, sharpen, Size(0,0), 3);
+			addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
+			cvtColor(sharpen, pageImg, CV_BGR2GRAY);
 		}
-		Point leftTopP, leftBotP, rightTopP, rightBotP;
-		if (leftP_1.y < leftP_2.y)
-		{
-			leftTopP = leftP_1;
-			leftBotP = leftP_2;
-		}else{
-			leftTopP = leftP_2;
-			leftBotP = leftP_1;
-		}
-		if (rightP_1.y < rightP_2.y)
-		{
-			rightTopP = rightP_1;
-			rightBotP = rightP_2;
-		}else{
-			rightTopP = rightP_2;
-			rightBotP = rightP_1;
-		}
-		float angle = getAngle(rightBotP, leftBotP, Point(rightBotP.x, leftBotP.y));
-		if (leftBotP.y < rightBotP.y) angle = -angle;
-
-		Mat rotated;
-
-		rotate(frame, -angle, rotated);
-		Point rotatedRightBotP = RotatePoint(Point(contrast.size().width/2., contrast.size().height/2.), rightBotP, angle);
-		Point rotatedLeftBotP = RotatePoint(Point(contrast.size().width/2., contrast.size().height/2.), leftBotP, angle);
-		//rotatedRightBotP = rotatedRightBotP * 2;
-		//rotatedLeftBotP = rotatedLeftBotP * 2;
-		pageImg = rotated(Rect(rotatedRightBotP.x-80, rotatedRightBotP.y-50, 80, 50)).clone();
-
-		Mat sharpen;
-		pyrUp(pageImg, pageImg);
-		GaussianBlur(pageImg, sharpen, Size(0, 0), 3);
-		addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
-		cvtColor(sharpen, pageImg, CV_BGR2GRAY);
-#ifdef DEBUG
-		imshow("Book image", bookImg);
-		imshow("Page number image", pageImg);
-#endif
+		else pageImg = rotatedSrc.clone();
 	}
+#ifdef DEBUG
+	Mat showFrame;
+	rectangle(reduced, boundingRect(Mat(contours[i])), Scalar(244,244,244),3,8,0);
+	pyrDown(reduced, showFrame);
+	pyrDown(binary, binary);
+	pyrDown(binary, binary);
+	vector<Mat> channels;
+	Mat result;
+	for(int i=0; i<3; ++i)
+		channels.push_back(binary);
+	merge(channels, result);
+	Rect roi(Point(0, 0), binary.size());
+	result.copyTo(showFrame(roi));
+	imshow("Detecting Book", showFrame);
+	imshow("Page number image", pageImg);
+#endif
 }
 
 Point Detector::detectTip(Mat frame) {
