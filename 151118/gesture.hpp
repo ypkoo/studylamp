@@ -42,7 +42,7 @@ namespace gesture{
 #ifdef DEBUG
 	#define HISTORY_MAX_COUNT 10
 	const uint32_t HISTORY_VECTOR_SIZE = 20;
-	const Scalar HISTORY_COLOR(40, 255, 125);
+	#define HISTORY_COLOR Scalar(40, 255, 125)
 	const uint32_t HISTORY_HOLDING_TICK = 1500;
 #endif
 
@@ -112,7 +112,7 @@ private:
 public:
 	Gesture(uint32_t width, uint32_t height);
 	~Gesture();
-	gesture::result registerPoint (int32_t x, int32_t y, uint32_t t);
+	gesture::result registerPoint (Point p, uint32_t t);
 	void visualize (Mat& img, uint32_t tick);
 };
 

@@ -37,6 +37,13 @@
 using namespace cv;
 using namespace std;
 
+Point linear_trans(Point v, double cosv, double sinv) {
+	Point res;
+	res.x = (int)(  cosv  * v.x + sinv * v.y);
+	res.y = (int)((-sinv) * v.x + cosv * v.y);
+	return res;
+}
+
 unsigned int getTick(void) {
 	unsigned int tick;
 #ifdef _WIN32
@@ -64,8 +71,8 @@ int main(int argc, char **argv){
 			return -1;
 		}
 		/* Set size as big enough, to get maximum size */
-		VC.set(CV_CAP_PROP_FRAME_WIDTH, 100000);
-		VC.set(CV_CAP_PROP_FRAME_HEIGHT, 100000);
+		VC.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+		VC.set(CV_CAP_PROP_FRAME_HEIGHT, 960);
 		cam_width = (uint32_t) VC.get(CV_CAP_PROP_FRAME_WIDTH);
 		cam_height = (uint32_t) VC.get(CV_CAP_PROP_FRAME_HEIGHT);
 		printf("Camera number %d, (w, h) = (%d, %d)\n", dev_num, cam_width, cam_height);
@@ -73,7 +80,6 @@ int main(int argc, char **argv){
 
 	Detector dtct;
 	Gesture gest(cam_width, cam_height);
-	unsigned int tick;
 	gesture::result res;
 
 #ifdef _WIN32
@@ -90,19 +96,17 @@ int main(int argc, char **argv){
 
 	Mat frame;
 	VC>>frame;
-	imwrite("output.bmp", frame);
+	// imwrite("output.bmp", frame);
 
 	Mat bookRotMat, rotMat;
 	Point bookCoord;
 	float cosval, sinval;
 	for(;;) {
-		tick = getTick();
-
 		VC >> frame;
 		//pyrDown(frame, frame);
 
 		Mat bookImg, pageImg;
-		dtct.detectBook(frame, bookImg, pageImg, bookRotMat, bookCoord);
+		dtct.detectBook(frame.clone(), bookImg, pageImg, bookRotMat, bookCoord);
 
 		api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
 		char *outText = api->GetUTF8Text();
@@ -110,28 +114,26 @@ int main(int argc, char **argv){
 		// delete [] outText;
 
 		Point v = dtct.detectTip(bookImg);
-
 		cosval = bookRotMat.at<double>(0, 0);
 		sinval = bookRotMat.at<double>(0, 1);
-		cout << bookRotMat << cosval << sinval << endl;
-		cout << bookCoord << endl;
-		rotMat = (Mat_<double>(2, 2) << cosval, sinval, -sinval, cosval);
-		v = transform(v, v, rotMat.inv());
-		v += bookCoord;
-		res = gest.registerPoint(v.x, v.y, tick);
+
+		Point abspoint = linear_trans (v, cosval, -sinval) + bookCoord;
+		res = gest.registerPoint(abspoint, getTick());
 #ifdef DEBUG
-		Mat gestmat(bookImg);
-		gest.visualize(gestmat, tick);
-		circle(gestmat, rotMat.inv() *(v-bookCoord), 5, Scalar(0, 0, 255), CV_FILLED);
-		imshow("Gest", gestmat);
+		gest.visualize(frame, getTick());
+		circle(frame, abspoint, 5, Scalar(0, 0, 255), CV_FILLED);
+		imshow("Gest", frame);
 #endif
 		// imshow("Original", bookImg);
 
 #ifdef _WIN32
-		if (res.type == gesture::V_TYPE)
+		if (res.type == gesture::V_TYPE) {
+			Point vpoint(res.V2_x, res.V2_y);
+			vpoint = linear_trans (vpoint - bookCoord, cosval, sinval);
 			msg.send_message ("%d;%d;%d;%d;%d;%d;%d",
 				bookImg.cols, bookImg.rows,
-				v.x, v.y, res.V2_x, res.V2_y, 41);
+				v.x, v.y, vpoint.x, vpoint.y, 41);
+		}
 		else
 			msg.send_message ("%d;%d;%d;%d;%d;%d;%d",
 				bookImg.cols, bookImg.rows,

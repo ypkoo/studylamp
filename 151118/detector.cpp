@@ -145,8 +145,8 @@ void Detector::detectBook(Mat frame, Mat& bookImg, Mat& pageImg, Mat& rot_mat, P
 
 		vector<Point> rectP;
 		findBookRegion(cHull[i], rectP);
-		float angle = getAngle(rectP[3], rectP[1], Point(rectP[3].x, rectP[1].y));
-		if (rectP[1].y > rectP[3].y)
+		float angle = getAngle(rectP[2], rectP[0], Point(rectP[2].x, rectP[0].y));
+		if (rectP[0].y > rectP[2].y)
 			angle = -angle;
 
 		Point2f frameSize(reduced.size());
@@ -162,7 +162,7 @@ void Detector::detectBook(Mat frame, Mat& bookImg, Mat& pageImg, Mat& rot_mat, P
 		Mat rotatedSrc = rotatedFrame(boundingRect(Mat(rotatedMask)));
 		imshow("book", rotatedSrc);
 
-		pyrUp(rotatedSrc, bookImg);
+		bookImg = rotatedSrc.clone();
 
 		if (rotatedSrc.size().height > 30 && rotatedSrc.size().width > 30) {
 			pageImg = rotatedSrc(Rect(20, rotatedSrc.size().height-30, 50, 30));
@@ -177,7 +177,7 @@ void Detector::detectBook(Mat frame, Mat& bookImg, Mat& pageImg, Mat& rot_mat, P
 #ifdef DEBUG
 	Mat showFrame;
 	rectangle(reduced, boundingRect(Mat(contours[i])), Scalar(244,244,244),3,8,0);
-	pyrDown(reduced, showFrame);
+	showFrame = reduced.clone();
 	pyrDown(binary, binary);
 	pyrDown(binary, binary);
 	vector<Mat> channels;
@@ -234,5 +234,5 @@ Point Detector::detectTip(Mat frame) {
 #endif
 	}
 
-	return stippest;
+	return stippest*2;
 }

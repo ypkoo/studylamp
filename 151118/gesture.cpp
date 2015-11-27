@@ -95,7 +95,7 @@ void Gesture::DouglasPeucker(std::vector<size_t>& _marked, size_t front, size_t 
 	}
 }
 
-result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
+result Gesture::registerPoint(Point P, uint32_t t)
 {
 	// cout << "gesture called" << endl;
 	// if buffer becomes to be full, remove all groups except the last three groups.
@@ -126,29 +126,29 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 		}
 	}
 
-	if (x >= 0 && y >= 0) {
+	if (P.x >= 0 && P.y >= 0) {
 		// process new point
 	// cout << "group size " << groups.size() << endl;
 		if (!groups.empty()){
 			struct group *end_gp = &groups[groups.size()-1];
 			uint32_t count = end_gp->count;
 			//cout << count << end_gp->x << ""endl;
-			float xdiff = end_gp->x - x;
-			float ydiff = end_gp->y - y;
+			float xdiff = end_gp->x - P.x;
+			float ydiff = end_gp->y - P.y;
 			float diff = xdiff * xdiff + ydiff * ydiff;
 
 			if (end_gp->duration < TIME_TO_GROUP) { // If the last group does not complete yet,
 				if (diff < GROUP_SIZE_LIMIT_SQUARE) { // If near enough, just attach new point to group.
-					end_gp->x = ((end_gp->x*count)+x)/(count+1);
-					end_gp->y = ((end_gp->y*count)+y)/(count+1);
+					end_gp->x = ((end_gp->x*count)+P.x)/(count+1);
+					end_gp->y = ((end_gp->y*count)+P.y)/(count+1);
 					end_gp->duration +=  t-points[end_gp->end].t;
 					end_gp->end = p_index;
 					end_gp->count++;
 					end_gp->collect_time_limit = t + TIME_TO_MOTION;
 				}
 				else { // If so far, delete original group and make a new group.
-					end_gp->x = x;
-					end_gp->y = y;
+					end_gp->x = P.x;
+					end_gp->y = P.y;
 					end_gp->duration = 0;
 					end_gp->start = end_gp->end = p_index;
 					end_gp->count = 1;
@@ -157,8 +157,8 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 			}
 			else { // If the last group was already complete,
 				if (diff < GROUP_DETAILED_SIZE_LIMIT_SQUARE) { // If near enough, just attach new point with dequeue.
-					end_gp->x += ((float)x-points[end_gp->start].x)/count;
-					end_gp->y += ((float)y-points[end_gp->start].y)/count;
+					end_gp->x += ((float)P.x-points[end_gp->start].x)/count;
+					end_gp->y += ((float)P.y-points[end_gp->start].y)/count;
 					// end_gp->duration = TIME_TO_GROUP;
 					end_gp->start++;
 					end_gp->end++;
@@ -166,8 +166,8 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 				}
 				else { // If so far, make a new group. (* ready to track following points)
 					struct group new_gp;
-					new_gp.x = x;
-					new_gp.y = y;
+					new_gp.x = P.x;
+					new_gp.y = P.y;
 					new_gp.duration = 0;
 					new_gp.start = new_gp.end = p_index;
 					new_gp.count = 1;
@@ -179,8 +179,8 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 		else {
 			// if there was no group
 			struct group new_gp;
-			new_gp.x = x;
-			new_gp.y = y;
+			new_gp.x = P.x;
+			new_gp.y = P.y;
 			new_gp.duration = 0;
 			new_gp.start = new_gp.end = p_index;
 			new_gp.count = 1;
@@ -189,8 +189,8 @@ result Gesture::registerPoint(int32_t x, int32_t y, uint32_t t)
 		}
 
 		// register new point
-		points[p_index].x = x;
-		points[p_index].y = y;
+		points[p_index].x = P.x;
+		points[p_index].y = P.y;
 		points[p_index].t = t;
 
 		p_index++;
@@ -299,7 +299,7 @@ void Gesture::visualize (Mat& img, uint32_t tick) {
 			delete_count++;
 			continue;
 		}
-		color = HISTORY_COLOR * (((float)(HISTORY_HOLDING_TICK-tick+his_tick))/HISTORY_HOLDING_TICK);
+		color = HISTORY_COLOR * (((double)(HISTORY_HOLDING_TICK-tick+his_tick))/HISTORY_HOLDING_TICK);
 		
 		j = 1;
 		prev = history_vectors[i][0];

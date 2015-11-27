@@ -5,6 +5,10 @@
 // 
 // @author S.H.Lee
 // 
+// @version 1.1
+// @since 2015-11-27
+// Implementation for receiving message. (receive_message)
+//
 // @version 1.0
 // @since 2015-11-19
 // First implementation
