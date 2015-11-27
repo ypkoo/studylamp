@@ -117,7 +117,7 @@ void Detector::findBookRegion(vector<Point> cHull, vector<Point>& endPoints) {
 	endPoints.push_back(rightBotP);
 }
 
-void Detector::detectBook(Mat frame, Mat& bookImg, Mat& pageImg) {
+void Detector::detectBook(Mat frame, Mat& bookImg, Mat& pageImg, Mat& rot_mat, Point& leftTopPoint) {
 	Mat reduced, contrast, _contrast;
 	pyrDown(frame, reduced);
 	blur(reduced, contrast, Size(3,3));
@@ -154,7 +154,8 @@ void Detector::detectBook(Mat frame, Mat& bookImg, Mat& pageImg) {
 		fillConvexPoly(mask, &cHull[i][0], cHull[i].size(), 255, 8, 0);
 		bookImg = Mat(Size(frameSize), CV_8UC3, Scalar(214,186,149));
 		reduced.copyTo(bookImg, mask);
-		Mat rot_mat = getRotationMatrix2D(frameSize/2, angle, 1.0);
+		rot_mat = getRotationMatrix2D(frameSize/2, angle, 1.0);
+		leftTopPoint = rectP[0];
 		Mat rotatedFrame, rotatedMask;
 		warpAffine(bookImg, rotatedFrame, rot_mat, Size(frameSize));
 		warpAffine(mask, rotatedMask, rot_mat, Size(frameSize));

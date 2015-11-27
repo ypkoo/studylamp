@@ -29,7 +29,7 @@ using namespace std;
 class Detector{
 	public:
 		Detector();
-		void detectBook(Mat frame, Mat& bookImg, Mat& pageImg);
+		void detectBook(Mat frame, Mat& bookImg, Mat& pageImg, Mat& rot_mat, Point& leftTopPoint);
 		Point detectTip(Mat frame);
 
 	private:

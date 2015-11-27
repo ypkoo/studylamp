@@ -91,6 +91,10 @@ int main(int argc, char **argv){
 	Mat frame;
 	VC>>frame;
 	imwrite("output.bmp", frame);
+
+	Mat bookRotMat, rotMat;
+	Point bookCoord;
+	float cosval, sinval;
 	for(;;) {
 		tick = getTick();
 
@@ -98,18 +102,27 @@ int main(int argc, char **argv){
 		//pyrDown(frame, frame);
 
 		Mat bookImg, pageImg;
-		dtct.detectBook(frame, bookImg, pageImg);
+		dtct.detectBook(frame, bookImg, pageImg, bookRotMat, bookCoord);
+
 		api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
 		char *outText = api->GetUTF8Text();
 		cout << outText[0] << outText[1] << endl;
 		// delete [] outText;
 
 		Point v = dtct.detectTip(bookImg);
+
+		cosval = bookRotMat.at<double>(0, 0);
+		sinval = bookRotMat.at<double>(0, 1);
+		cout << bookRotMat << cosval << sinval << endl;
+		cout << bookCoord << endl;
+		rotMat = (Mat_<double>(2, 2) << cosval, sinval, -sinval, cosval);
+		v = transform(v, v, rotMat.inv());
+		v += bookCoord;
 		res = gest.registerPoint(v.x, v.y, tick);
 #ifdef DEBUG
 		Mat gestmat(bookImg);
 		gest.visualize(gestmat, tick);
-		circle(gestmat, v, 5, Scalar(0, 0, 255), CV_FILLED);
+		circle(gestmat, rotMat.inv() *(v-bookCoord), 5, Scalar(0, 0, 255), CV_FILLED);
 		imshow("Gest", gestmat);
 #endif
 		// imshow("Original", bookImg);
