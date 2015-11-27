@@ -33,12 +33,14 @@ class Detector{
 		Point detectTip(Mat frame);
 
 	private:
+		int l_coef_book1[3], u_coef_book1[3];
+		int l_coef_book2[3], u_coef_book2[3];
+		int l_coef_tip[3], u_coef_tip[3];
 		float getAngle(Point s, Point f, Point e);
 		int findBiggestContour(vector<vector<Point> > contours);
 		void findStippest(vector<Point> polygon, Point& stippest);
 		void findBookRegion(vector<Point> cHull, vector<Point>& endPoints);
 		void rotate(Mat src, Point cen_pt, float width, float height, double angle, Mat& dst);
-		float distanceP2P(Point a, Point b);
 };
 
 #endif
