@@ -73,6 +73,8 @@ int main(int argc, char **argv){
 		/* Set size as big enough, to get maximum size */
 		VC.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
 		VC.set(CV_CAP_PROP_FRAME_HEIGHT, 960);
+		// VC.set(CV_CAP_PROP_FRAME_WIDTH, 2592);
+		// VC.set(CV_CAP_PROP_FRAME_HEIGHT, 1944);
 		cam_width = (uint32_t) VC.get(CV_CAP_PROP_FRAME_WIDTH);
 		cam_height = (uint32_t) VC.get(CV_CAP_PROP_FRAME_HEIGHT);
 		printf("Camera number %d, (w, h) = (%d, %d)\n", dev_num, cam_width, cam_height);
@@ -93,6 +95,7 @@ int main(int argc, char **argv){
 		fprintf(stderr, "Could not initialize tesseract.\n");
 		exit(1);
 	}
+	api->SetVariable("tessedit_char_whitelist","0123456789");
 
 	Mat frame;
 	VC>>frame;
