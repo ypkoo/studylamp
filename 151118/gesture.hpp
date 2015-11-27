@@ -42,7 +42,7 @@ namespace gesture{
 #ifdef DEBUG
 	#define HISTORY_MAX_COUNT 10
 	const uint32_t HISTORY_VECTOR_SIZE = 20;
-	const Scalar HISTORY_COLOR(40, 255, 125);
+	#define HISTORY_COLOR Scalar(40, 255, 125)
 	const uint32_t HISTORY_HOLDING_TICK = 1500;
 #endif
 

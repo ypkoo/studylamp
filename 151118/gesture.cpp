@@ -299,7 +299,7 @@ void Gesture::visualize (Mat& img, uint32_t tick) {
 			delete_count++;
 			continue;
 		}
-		color = HISTORY_COLOR * (((float)(HISTORY_HOLDING_TICK-tick+his_tick))/HISTORY_HOLDING_TICK);
+		color = HISTORY_COLOR * (((double)(HISTORY_HOLDING_TICK-tick+his_tick))/HISTORY_HOLDING_TICK);
 		
 		j = 1;
 		prev = history_vectors[i][0];

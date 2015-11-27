@@ -145,33 +145,79 @@ void Detector::detectBook(Mat frame, Mat& bookImg, Mat& pageImg) {
 
 		vector<Point> rectP;
 		findBookRegion(cHull[i], rectP);
-		float angle = getAngle(rectP[3], rectP[1], Point(rectP[3].x, rectP[1].y));
-		if (rectP[1].y > rectP[3].y)
+		float angle = getAngle(rectP[2], rectP[0], Point(rectP[2].x, rectP[0].y));
+		if (rectP[0].y > rectP[2].y)
 			angle = -angle;
 
 		Point2f frameSize(reduced.size());
 		Mat mask(Size(frameSize), CV_8U, Scalar::all(0));
 		fillConvexPoly(mask, &cHull[i][0], cHull[i].size(), 255, 8, 0);
-		bookImg = Mat(Size(frameSize), CV_8UC3, Scalar(214,186,149));
+		// bookImg = Mat(Size(frameSize), CV_8UC3, Scalar(214,186,149));
+		bookImg = Mat(Size(frameSize), CV_8UC3, Scalar(255,255,255));
 		reduced.copyTo(bookImg, mask);
-		Mat rot_mat = getRotationMatrix2D(frameSize/2, angle, 1.0);
+		Mat rot_mat = getRotationMatrix2D(Point(frameSize.x/2.,frameSize.y/2.), angle, 1.0);
 		Mat rotatedFrame, rotatedMask;
 		warpAffine(bookImg, rotatedFrame, rot_mat, Size(frameSize));
 		warpAffine(mask, rotatedMask, rot_mat, Size(frameSize));
-		Mat rotatedSrc = rotatedFrame(boundingRect(Mat(rotatedMask)));
+
+		// Rect bRect = boundingRect(rotatedMask);
+		// cout << bRect << endl;
+
+
+		vector<vector<Point> > bookContours;
+		findContours(rotatedMask, bookContours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+		// int i = findBiggestContour(bookContours);
+		Mat rotatedSrc = rotatedFrame(boundingRect(bookContours[0]));
+		// Mat rotatedSrc;// = rotatedFrame();
+		// rotatedFrame.copyTo(rotatedSrc, rotatedMask);
 		imshow("book", rotatedSrc);
 
-		pyrUp(rotatedSrc, bookImg);
+		// pyrUp(rotatedSrc, bookImg);
+		// Point relRightBotP = Point(MIN(rectP[3].x-rectP[0].x, rotatedSrc.size().width), MIN(rectP[3].y-rectP[0].y, rotatedSrc.size().height));
 
-		if (rotatedSrc.size().height > 30 && rotatedSrc.size().width > 30) {
-			pageImg = rotatedSrc(Rect(20, rotatedSrc.size().height-30, 50, 30));
-			Mat sharpen;
-			pyrUp(pageImg, pageImg);
-			GaussianBlur(pageImg, sharpen, Size(0,0), 3);
-			addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
-			cvtColor(sharpen, pageImg, CV_BGR2GRAY);
-		}
-		else pageImg = rotatedSrc.clone();
+		pageImg = rotatedSrc(Rect(rotatedSrc.size().width-50, rotatedSrc.size().height-50, 50, 50));
+		Mat sharpen;
+		pyrUp(pageImg, pageImg);
+		GaussianBlur(pageImg, sharpen, Size(0,0), 3);
+		addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
+		cvtColor(sharpen, pageImg, CV_BGR2GRAY);
+		Mat pageImgTemp;
+		cvtColor(sharpen, pageImgTemp, CV_BGR2GRAY);
+		pageImgTemp.convertTo(pageImg, -1, 1.3, 0.4);
+		// Mat moreSharpen;
+		// GaussianBlur(pageImg, moreSharpen, Size(0,0), 3);
+		// addWeighted(pageImg, 1.5, moreSharpen, -0.5, 0, moreSharpen);
+		// pageImg = moreSharpen;
+
+
+		// bilateralFilter(sharpen, pageImg, 9,75,75);
+		// cvtColor(pageImg, pageImg, CV_BGR2GRAY);
+	
+
+		// Mat bw;
+		// inRange(pageImg, Scalar(0,0,0), Scalar(170,170,170), bw);
+		// pyrUp(bw,bw);
+		// medianBlur(bw, bw, 5);
+		// pyrDown(bw,bw);
+		// bitwise_not(bw, bw);
+		// imshow("Page number image temp not sharpen", bw);
+		// Mat bw_sharpen;
+		// GaussianBlur(bw, bw_sharpen, Size(0,0), 3);
+		// addWeighted(bw, 1.5, bw_sharpen, -0.5, 0, bw_sharpen);
+		// imshow("Page number image temp", bw_sharpen);
+		// pageImg = bw;
+
+
+
+		// if (rotatedSrc.size().height > 30 && rotatedSrc.size().width > 30) {
+		// 	pageImg = rotatedSrc(Rect(20, rotatedSrc.size().height-30, 50, 30));
+		// 	Mat sharpen;
+		// 	pyrUp(pageImg, pageImg);
+		// 	GaussianBlur(pageImg, sharpen, Size(0,0), 3);
+		// 	addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
+		// 	cvtColor(sharpen, pageImg, CV_BGR2GRAY);
+		// }
+		// else pageImg = rotatedSrc.clone();
 	}
 #ifdef DEBUG
 	Mat showFrame;
