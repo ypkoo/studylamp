@@ -17,64 +17,32 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <tesseract/baseapi.h>
+#include <leptonica/allheaders.h>
 
 using namespace cv;
 using namespace std;
 
 Detector::Detector() {
-#ifdef DEBUG
-// 	l_coef_book1[0] = -72;
-// 	l_coef_book1[1] = -192;
-// 	l_coef_book1[2] = -74;
-// 	u_coef_book1[0] = -207;
-// 	u_coef_book1[1] = -206;
-// 	u_coef_book1[2] = -400;
-// 	l_coef_book2[0] = 71;
-// 	l_coef_book2[1] = 33;
-// 	l_coef_book2[2] = -154;
-// 	u_coef_book2[0] = 214;
-// 	u_coef_book2[1] = 246;
-// 	u_coef_book2[2] = 339;
-	l_coef_tip[0] = 0;
-	l_coef_tip[1] = 104;
-	l_coef_tip[2] = 3;
-	u_coef_tip[0] = 255;
-	u_coef_tip[1] = 255;
-	u_coef_tip[2] = 255;
-	// namedWindow("ControlBook1", WINDOW_AUTOSIZE);
-	// createTrackbar("Book_H_lower", "ControlBook1", &l_coef_book1[0], 255);
-	// createTrackbar("Book_S_lower", "ControlBook1", &l_coef_book1[1], 255);
-	// createTrackbar("Book_L_lower", "ControlBook1", &l_coef_book1[2], 255);
-	// createTrackbar("Book_H_upper", "ControlBook1", &u_coef_book1[0], 255);
-	// createTrackbar("Book_S_upper", "ControlBook1", &u_coef_book1[1], 255);
-	// createTrackbar("Book_L_upper", "ControlBook1", &u_coef_book1[2], 255);
-	// namedWindow("ControlBook2", WINDOW_AUTOSIZE);
-	// createTrackbar("Book_H_lower", "ControlBook2", &l_coef_book2[0], 255);
-	// createTrackbar("Book_S_lower", "ControlBook2", &l_coef_book2[1], 255);
-	// createTrackbar("Book_L_lower", "ControlBook2", &l_coef_book2[2], 255);
-	// createTrackbar("Book_H_upper", "ControlBook2", &u_coef_book2[0], 255);
-	// createTrackbar("Book_S_upper", "ControlBook2", &u_coef_book2[1], 255);
-	// createTrackbar("Book_L_upper", "ControlBook2", &u_coef_book2[2], 255);
-	namedWindow("ControlTip", WINDOW_AUTOSIZE);
-	createTrackbar("Book_H_lower", "ControlTip", &l_coef_tip[0], 255);
-	createTrackbar("Book_S_lower", "ControlTip", &l_coef_tip[1], 255);
-	createTrackbar("Book_L_lower", "ControlTip", &l_coef_tip[2], 255);
-	createTrackbar("Book_H_upper", "ControlTip", &u_coef_tip[0], 255);
-	createTrackbar("Book_S_upper", "ControlTip", &u_coef_tip[1], 255);
-	createTrackbar("Book_L_upper", "ControlTip", &u_coef_tip[2], 255);
-#endif
+	api = new tesseract::TessBaseAPI();
+	api->SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
+	if (api->Init(NULL, "eng")) {
+		fprintf(stderr, "Could not initialize tesseract.\n");
+		exit(1);
+	}
+	api->SetVariable("tessedit_char_whitelist","0123456789");
 }
 
 int Detector::findBiggestContour(vector<vector<Point> > contours) {
-    int indexOfBiggestContour = -1;
-    int sizeOfBiggestContour = 0;
-    for (int i = 0; i < contours.size(); i++){
-        if(contours[i].size() > sizeOfBiggestContour){
-            sizeOfBiggestContour = contours[i].size();
-            indexOfBiggestContour = i;
-        }
-    }
-    return indexOfBiggestContour;
+	 int indexOfBiggestContour = -1;
+	 int sizeOfBiggestContour = 0;
+	 for (int i = 0; i < contours.size(); i++){
+		  if(contours[i].size() > sizeOfBiggestContour){
+				sizeOfBiggestContour = contours[i].size();
+				indexOfBiggestContour = i;
+		  }
+	 }
+	 return indexOfBiggestContour;
 }
 
 float Detector::getAngle(Point s, Point f, Point e) {
@@ -100,236 +68,150 @@ void Detector::findStippest(vector<Point> polygon, Point& stippest) {
 	}
 }
 
-void Detector::rotate(Mat src, Point cen_pt, float width, float height, double angle, Mat& dst)
-{
-    Mat r = getRotationMatrix2D(cen_pt, angle, 1.0);
-    Mat dst_temp;
-    warpAffine(src, dst_temp, r, Size(width*abs(cos(angle))+height*abs(sin(angle)),width*abs(sin(angle))+height*abs(cos(angle))));
-    if(MIN(width, dst_temp.size().width-cen_pt.x) > 0 && MIN(height, dst_temp.size().height-cen_pt.y) > 0)
-	    dst = dst_temp(Rect(cen_pt.x, cen_pt.y, MIN(width, dst_temp.size().width-cen_pt.x), MIN(height, dst_temp.size().height-cen_pt.y))).clone();
-	else dst = dst_temp.clone();
-}
-
-void Detector::findBookRegion(vector<Point> cHull, vector<Point>& endPoints) {
+void Detector::findBookRegion(vector<Point> cHull, Point& leftTop, Point& rightTop) {
 	vector<Point>::iterator d = cHull.begin();
-	Point leftP_1(99999, 0);
-	Point leftP_2(99999, 0);
-	Point rightP_1(0, 0);
-	Point rightP_2(0, 0);
+	Point leftP1(99999, 0);
+	Point leftP2(99999, 0);
+	Point rightP1(0, 0);
+	Point rightP2(0, 0);
 	while(d != cHull.end()) {
 		Point p = *d++;
-		if (leftP_1.x > p.x) {
-			leftP_2 = leftP_1;
-			leftP_1 = p;
+		if (leftP1.x > p.x) {
+			leftP2 = leftP1;
+			leftP1 = p;
 		}
-		else if(leftP_2.x > p.x)
-			leftP_2 = p;
-		if (rightP_1.x < p.x) {
-			rightP_2 = rightP_1;
-			rightP_1 = p;
+		else if(leftP2.x > p.x)
+			leftP2 = p;
+		if (rightP1.x < p.x) {
+			rightP2 = rightP1;
+			rightP1 = p;
 		}
-		else if(rightP_2.x < p.x)
-			rightP_2 = p;
+		else if(rightP2.x < p.x)
+			rightP2 = p;
 	}
 
-	Point leftTopP, leftBotP, rightTopP, rightBotP;
-	if (leftP_1.y < leftP_2.y) {
-		leftTopP = leftP_1;
-		leftBotP = leftP_2;
-	}
-	else {
-		leftTopP = leftP_2;
-		leftBotP = leftP_1;
-	}
-	if (rightP_1.y < rightP_2.y) {
-		rightTopP = rightP_1;
-		rightBotP = rightP_2;
-	}
-	else {
-		rightTopP = rightP_2;
-		rightBotP = rightP_1;
-	}
-	endPoints.push_back(leftTopP);
-	endPoints.push_back(leftBotP);
-	endPoints.push_back(rightTopP);
-	endPoints.push_back(rightBotP);
+	leftTop = leftP1.y<leftP2.y? leftP1: leftP2;
+	rightTop = rightP1.y<rightP2.y? rightP1: rightP2;
 }
 
-
-
-void Detector::detectBook(Mat frame, Mat& bookImg, Mat& pageImg, Mat& rot_mat, Point& leftTopPoint) {
-	Mat reduced, contrast, _contrast;
-	pyrDown(frame, reduced);
-	blur(reduced, contrast, Size(3,3));
-	reduced.convertTo(contrast, -1, 2, 0);
-	pyrDown(contrast, _contrast);
+void Detector::filter(Mat src, Mat& dst) {
+	Mat tmp;
+	blur(src, tmp, Size(3,3));
+	tmp.convertTo(tmp, CV_8UC3, 2, 0);
+	pyrDown(tmp, tmp);
 
 	Mat binary, binary2;
-	cvtColor(_contrast, _contrast, CV_BGR2HLS);
-	inRange(_contrast, Scalar(-72,-192,-74), Scalar(207,206,400), binary);
-	inRange(_contrast, Scalar(71,33,-154), Scalar(214,246,339), binary2);
+	cvtColor(tmp, tmp, CV_BGR2HLS);
+	inRange(tmp, Scalar(-72,-192,-74), Scalar(207,206,400), binary);
+	inRange(tmp, Scalar(71,33,-154), Scalar(214,246,339), binary2);
 	binary += binary2;
 	medianBlur(binary, binary, 7);
-	bitwise_not(binary, binary);
-	pyrUp(binary, binary);
-	
-	vector<vector<Point> > contours;
-	Mat _binary = binary.clone();
-	findContours(_binary, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+	pyrUp(binary, dst);
+}
 
+void Detector::rotate(Mat src, Mat& dst, float angle) {
+	Size s = src.size();
+	Mat rot_mat = getRotationMatrix2D(Point(s)/2., angle, 1.0);
+	warpAffine(src, dst, rot_mat, s);
+}
+
+int Detector::getPageNum(Mat src) {
+	Mat pageImg;
+	/* Right page number */
+	// if (src.size().height > 30 && src.size().width > 30)
+	// 	pageImg = src(Rect(20, src.size().height-30, 50, 30));
+
+	/* Left page number */
+	if (src.size().height > 30 && src.size().width > 30)
+		pageImg = src(Rect(src.size().width-50, src.size().height-50, 50, 50));
+	else
+		pageImg = src.clone();
+
+	Mat sharpen;
+	pyrUp(pageImg, pageImg);
+	GaussianBlur(pageImg, sharpen, Size(0,0), 3);
+	addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
+	cvtColor(sharpen, pageImg, CV_BGR2GRAY);
+	imshow("6. Get page image", pageImg);
+
+	api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
+	char *outText = api->GetUTF8Text();
+
+	if (strlen(outText) > 0)
+		cout << outText << endl;
+	return 0;
+}
+
+Point Detector::rel2abs(Point p) {
+	Point res;
+	float cosv = cos(PI*angle/180);
+	float sinv = sin(PI*angle/180);
+	res.x = (int)(cosv * p.x - sinv * p.y);
+	res.y = (int)(sinv * p.x + cosv * p.y);
+	return (res + bookCoord);
+}
+
+Point Detector::abs2rel(Point p) {
+	Point res = p - bookCoord;
+	float cosv = cos(PI*angle/180);
+	float sinv = sin(PI*angle/180);
+	res.x = (int)(  cosv  * p.x + sinv * p.y);
+	res.y = (int)(-(sinv) * p.x + cosv * p.y);
+	return res;
+}
+
+void Detector::cropBook(Mat src, Mat& bookImg, float angle, Mat mask) {
+	Mat canvas = Mat(src.size(), CV_8UC3, Scalar(255,255,255));
+	src.copyTo(canvas, mask);
+	Mat bookArea;
+	rotate(canvas, bookImg, angle);
+	rotate(mask, bookArea, angle);
+	bookImg = bookImg(boundingRect(bookArea));	
+}
+
+void Detector::detect(Mat frame, Mat& bookImg, int& pageNum, Point& relpoint) {
+	Mat bookMask;
+	detectBook(frame, bookCoord, angle, bookMask);
+	cropBook(frame, bookImg, angle, bookMask);
+	relpoint = detectTip(bookImg);
+	pageNum = getPageNum(bookImg);
+}
+
+void Detector::detectBook(Mat src, Point &leftTop, float& angle, Mat& bookArea) {
+	Mat binary, _tmp;
+	filter(src, binary);
+	bitwise_not(binary, _tmp);
+	vector<vector<Point> > contours;
+	findContours(_tmp, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 	int i = findBiggestContour(contours);
 	vector<vector<Point> > cHull = vector<vector<Point> >(contours.size());
 	if(i != -1) {
 		convexHull(Mat(contours[i]), cHull[i], false, true);
 		approxPolyDP(Mat(cHull[i]), cHull[i], 15, true);
 
-		vector<Point> rectP;
-		findBookRegion(cHull[i], rectP);
-		leftTopPoint = rectP[0]*2;
-		float angle = getAngle(rectP[2], rectP[0], Point(rectP[2].x, rectP[0].y));
-		if (rectP[0].y > rectP[2].y)
+		Point rightTop;
+		findBookRegion(cHull[i], leftTop, rightTop);
+		angle = getAngle(rightTop, leftTop, Point(rightTop.x, leftTop.y));
+		if (leftTop.y > rightTop.y)
 			angle = -angle;
 
-		Point2f frameSize(reduced.size());
-		Mat mask(Size(frameSize), CV_8U, Scalar::all(0));
-		fillConvexPoly(mask, &cHull[i][0], cHull[i].size(), 255, 8, 0);
-		// bookImg = Mat(Size(frameSize), CV_8UC3, Scalar(214,186,149));
-		bookImg = Mat(Size(frameSize), CV_8UC3, Scalar(255,255,255));
-		reduced.copyTo(bookImg, mask);
-		rot_mat = getRotationMatrix2D(Point(frameSize.x/2.,frameSize.y/2.), angle, 1.0);
-		Mat rotatedFrame, rotatedMask;
-		warpAffine(bookImg, rotatedFrame, rot_mat, Size(frameSize));
-		warpAffine(mask, rotatedMask, rot_mat, Size(frameSize));
-
-		// Rect bRect = boundingRect(rotatedMask);
-		// cout << bRect << endl;
-
-
-		vector<vector<Point> > bookContours;
-		findContours(rotatedMask, bookContours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-		// int i = findBiggestContour(bookContours);
-		Mat rotatedSrc = rotatedFrame(boundingRect(bookContours[0]));
-		// Mat rotatedSrc;// = rotatedFrame();
-		// rotatedFrame.copyTo(rotatedSrc, rotatedMask);
-		imshow("book", rotatedSrc);
-
-		bookImg = rotatedSrc.clone();
-
-		// pyrUp(rotatedSrc, bookImg);
-		// Point relRightBotP = Point(MIN(rectP[3].x-rectP[0].x, rotatedSrc.size().width), MIN(rectP[3].y-rectP[0].y, rotatedSrc.size().height));
-
-
-		// right bottom page number
-		pageImg = rotatedSrc(Rect(rotatedSrc.size().width-50, rotatedSrc.size().height-50, 50, 50));
-		Mat sharpen;
-		pyrUp(pageImg, pageImg);
-		GaussianBlur(pageImg, sharpen, Size(0,0), 3);
-		addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
-		cvtColor(sharpen, pageImg, CV_BGR2GRAY);
-		Mat pageImgTemp;
-		cvtColor(sharpen, pageImgTemp, CV_BGR2GRAY);
-		pageImgTemp.convertTo(pageImg, -1, 1.3, 0.4);
-		// Mat moreSharpen;
-		// GaussianBlur(pageImg, moreSharpen, Size(0,0), 3);
-		// addWeighted(pageImg, 1.5, moreSharpen, -0.5, 0, moreSharpen);
-		// pageImg = moreSharpen;
-
-
-		// bilateralFilter(sharpen, pageImg, 9,75,75);
-		// cvtColor(pageImg, pageImg, CV_BGR2GRAY);
-	
-
-		// Mat bw;
-		// inRange(pageImg, Scalar(0,0,0), Scalar(170,170,170), bw);
-		// pyrUp(bw,bw);
-		// medianBlur(bw, bw, 5);
-		// pyrDown(bw,bw);
-		// bitwise_not(bw, bw);
-		// imshow("Page number image temp not sharpen", bw);
-		// Mat bw_sharpen;
-		// GaussianBlur(bw, bw_sharpen, Size(0,0), 3);
-		// addWeighted(bw, 1.5, bw_sharpen, -0.5, 0, bw_sharpen);
-		// imshow("Page number image temp", bw_sharpen);
-		// pageImg = bw;
-
-
-
-		/* left bottom page number */
-		// if (rotatedSrc.size().height > 30 && rotatedSrc.size().width > 30) {
-		// 	pageImg = rotatedSrc(Rect(20, rotatedSrc.size().height-30, 50, 30));
-		// 	Mat sharpen;
-		// 	pyrUp(pageImg, pageImg);
-		// 	GaussianBlur(pageImg, sharpen, Size(0,0), 3);
-		// 	addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
-		// 	cvtColor(sharpen, pageImg, CV_BGR2GRAY);
-		// }
-		// else pageImg = rotatedSrc.clone();
+		bookArea = Mat(binary.size(), CV_8U, Scalar::all(0));
+		fillConvexPoly(bookArea, &cHull[i][0], cHull[i].size(), 255, 8, 0);
 	}
-#ifdef DEBUG
-	Mat showFrame;
-	rectangle(reduced, boundingRect(Mat(contours[i])), Scalar(244,244,244),3,8,0);
-	showFrame = reduced.clone();
-	pyrDown(binary, binary);
-	pyrDown(binary, binary);
-	vector<Mat> channels;
-	Mat result;
-	for(int i=0; i<3; ++i)
-		channels.push_back(binary);
-	merge(channels, result);
-	Rect roi(Point(0, 0), binary.size());
-	result.copyTo(showFrame(roi));
-	imshow("Detecting Book", showFrame);
-	imshow("Page number image", pageImg);
-#endif
 }
 
-Point Detector::detectTip(Mat frame) {
-Mat contrast, _contrast;
-   blur(frame, contrast, Size(3,3));
-   contrast.convertTo(contrast, -1, 2, 0);
-   pyrDown(contrast, _contrast);
-
-   Mat binary, binary2;
-   cvtColor(_contrast, _contrast, CV_BGR2HLS);
-   inRange(_contrast, Scalar(-72,-192,-74), Scalar(207,206,400), binary);
-   inRange(_contrast, Scalar(71,33,-154), Scalar(214,246,339), binary2);
-   binary += binary2;
-   medianBlur(binary, binary, 7);
-   pyrUp(binary, binary);
-
-
-   vector<vector<Point> > contours;
-   Mat _binary = binary.clone();
-   findContours(_binary, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-
-   Point stippest = Point(-1, -1);
-
-   int i = findBiggestContour(contours);
-   vector<vector<Point> > cHull = vector<vector<Point> >(contours.size());
-   if(i != -1) {
+Point Detector::detectTip(Mat src) {
+	vector<vector<Point> > contours;
+	Mat binary;
+	filter(src, binary);
+	findContours(binary, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+	Point stippest = Point(-1, -1);
+	int i = findBiggestContour(contours);
+	vector<vector<Point> > cHull = vector<vector<Point> >(contours.size());
+	if(i != -1) {
 		convexHull(Mat(contours[i]), cHull[i], false, true);
 		approxPolyDP(Mat(cHull[i]), cHull[i], 15, true);
 		findStippest(cHull[i], stippest);
-   
-#ifdef DEBUG
-		Mat showFrame = frame.clone();
-		if (stippest != Point(-1, -1)) {
-		 drawContours(showFrame, cHull, i, Scalar(0,0,200), 2, 8, vector<Vec4i>(), 0, Point());
-		    circle(showFrame, stippest, 4, Scalar(200,255,3), 6);
-		}
-		Mat mask(showFrame.size(), CV_8U, Scalar::all(0));
-		fillConvexPoly(mask, &cHull[i][0], cHull[i].size(), 255, 8, 0);
-		pyrDown(binary, binary);
-		pyrDown(binary, binary);
-		vector<Mat> channels;
-		Mat result;
-		for(int i=0; i<3; ++i)
-		 channels.push_back(binary);
-		merge(channels, result);
-		Rect roi(Point(0, 0), binary.size());
-		result.copyTo(showFrame(roi));
-		imshow("Detecting Tip", showFrame);
-#endif
-   }
-   return stippest * 2;
+	}
+	return stippest;
 }

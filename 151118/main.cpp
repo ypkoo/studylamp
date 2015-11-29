@@ -19,8 +19,6 @@
 #include <sys/time.h>
 #endif
 
-#include <tesseract/baseapi.h>
-#include <leptonica/allheaders.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -88,59 +86,38 @@ int main(int argc, char **argv){
 	Messenger msg("127.0.0.1", 6974);
 #endif
 
-	tesseract::TessBaseAPI *api;
-	api = new tesseract::TessBaseAPI();
-	api->SetPageSegMode(tesseract::PSM_SINGLE_BLOCK);
-	if (api->Init(NULL, "eng")) {
-		fprintf(stderr, "Could not initialize tesseract.\n");
-		exit(1);
-	}
-	api->SetVariable("tessedit_char_whitelist","0123456789");
-
 	Mat frame;
 	VC>>frame;
 	// imwrite("output.bmp", frame);
 
-	Mat bookRotMat, rotMat;
-	Point bookCoord;
-	float cosval, sinval;
 	for(;;) {
 		VC >> frame;
-		//pyrDown(frame, frame);
 
-		Mat bookImg, pageImg;
-		dtct.detectBook(frame.clone(), bookImg, pageImg, bookRotMat, bookCoord);
+		Mat bookImg;
+		int pageNum;
+		Point abspoint, relpoint;
+		dtct.detect(frame, bookImg, pageNum, relpoint);
 
-		api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
-		char *outText = api->GetUTF8Text();
-		cout << outText[0] << outText[1] << endl;
-		// delete [] outText;
-
-		Point v = dtct.detectTip(bookImg);
-		cosval = bookRotMat.at<double>(0, 0);
-		sinval = bookRotMat.at<double>(0, 1);
-
-		Point abspoint = linear_trans (v, cosval, -sinval) + bookCoord;
+		abspoint = dtct.rel2abs(relpoint);
 		res = gest.registerPoint(abspoint, getTick());
 #ifdef DEBUG
 		gest.visualize(frame, getTick());
 		circle(frame, abspoint, 5, Scalar(0, 0, 255), CV_FILLED);
 		imshow("Gest", frame);
 #endif
-		// imshow("Original", bookImg);
 
 #ifdef _WIN32
 		if (res.type == gesture::V_TYPE) {
 			Point vpoint(res.V2_x, res.V2_y);
-			vpoint = linear_trans (vpoint - bookCoord, cosval, sinval);
+			Point avpoint = dtct.rel2abs(vpoint);
 			msg.send_message ("%d;%d;%d;%d;%d;%d;%d",
 				bookImg.cols, bookImg.rows,
-				v.x, v.y, vpoint.x, vpoint.y, 41);
+				relpoint.x, relpoint.y, vpoint.x, vpoint.y, 41);
 		}
 		else
 			msg.send_message ("%d;%d;%d;%d;%d;%d;%d",
 				bookImg.cols, bookImg.rows,
-				v.x, v.y, -1, -1, 41);
+				relpoint.x, relpoint.y, -1, -1, 41);
 #endif
   		if(cv::waitKey(30) == char('q')) break;
 	}
