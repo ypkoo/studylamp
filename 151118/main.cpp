@@ -34,6 +34,10 @@
 #include "gesture.hpp"
 #include "buttonDetector.hpp"
 
+#define HAVE_IMAGE_HASH
+#include <pHash.h>
+
+
 
 using namespace cv;
 using namespace std;
@@ -86,7 +90,7 @@ int main(int argc, char **argv){
 
 	/* Other modules. */
 	Detector dtct;
-	ButtonDetector bd;
+	ButtonDetector bd(cam_width, cam_height);
 	Gesture gest(cam_width, cam_height);
 #ifdef _WIN32
 	Messenger msg("127.0.0.1", 6974, 7469);
@@ -101,16 +105,22 @@ int main(int argc, char **argv){
 
 	/* Some processes before the loop */
 	VC>>frame;
+		cout << 0 << endl;
 	bd.setInitFrame(frame);
 	// imwrite("output.bmp", frame);
+		cout << 0 << endl;
 
 	/* Main loop */
 	while(1) {
 		/* Receive message, to catch whether state changed or not. */
+		cout << 0 << endl;
 #ifdef _WIN32
 		int bytes_read = 0;
-		while (bytes_read != UDP_BUFFER_SIZE){
-			bytes_read = msg.receive_message(udp_buffer, UDP_BUFFER_SIZE);
+		char last_char = '\0';
+		bytes_read = msg.receive_message(udp_buffer, UDP_BUFFER_SIZE);
+		if (bytes_read == UDP_BUFFER_SIZE) {
+			fprintf(stderr, "udp receive too much");
+			exit(1);
 		}
 		if (bytes_read != 0){
 #ifdef DEBUG
@@ -123,12 +133,17 @@ int main(int argc, char **argv){
 		program_status = STATUS_STUDY_SOLVING; // to get gesture things.
 #endif
 
+
+		cout << (int)program_status << endl;
 		VC >> frame;
 
 		Mat bookImg;
 		int pageNum;
 		Point abspoint, relpoint;
 		Mat gestFrame;
+
+		int hash_res;
+
 
 		switch (program_status){
 			case STATUS_BOOKCOVER:
@@ -153,6 +168,11 @@ int main(int argc, char **argv){
 		switch (program_status) {
     		case STATUS_BOOKCOVER:     // 0
     			/* PHASH */
+				dtct.detect(frame, bookImg, pageNum, relpoint);
+    			imwrite ("phash.png", bookImg);
+    			ulong64 hs;
+    			hash_res = ph_dct_imagehash("phash.png", hs);
+    			udp_buffer2 << hs;
     			continue;
     		case STATUS_STUDY_SOLVING: // 3
     		case STATUS_STUDY_SOLVED:  // 4

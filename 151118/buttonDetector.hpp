@@ -17,11 +17,14 @@ using namespace std;
 
 class ButtonDetector{
 	public:
-		ButtonDetector();
+		ButtonDetector(unsigned int width, unsigned int height);
 		vector<unsigned int> registerFrame(Mat newFrame);
 		void setInitFrame(Mat initFrame);
 		void setStatus(enum PROGRAM_STATUS newStatus);
 	private:
+		unsigned int width;
+		unsigned int height;
+
 		Mat initProjFrame;
 
 		unsigned int frameChangeInitTick;
