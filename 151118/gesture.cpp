@@ -5,6 +5,11 @@
 // 
 // @author S.H.Lee
 // 
+// @version 1.3
+// @since 2015-11-30
+// More natural recognition.
+// Behavior changed for interval on grouping
+//
 // @version 1.2
 // @since 2015-11-26
 // Strengthen visualize()
@@ -156,12 +161,15 @@ result Gesture::registerPoint(Point P, uint32_t t)
 				}
 			}
 			else { // If the last group was already complete,
-				if (diff < GROUP_DETAILED_SIZE_LIMIT_SQUARE) { // If near enough, just attach new point with dequeue.
+				if (diff < GROUP_DETAILED_SIZE_LIMIT_SQUARE) { // If near lot, just attach new point with dequeue.
 					end_gp->x += ((float)P.x-points[end_gp->start].x)/count;
 					end_gp->y += ((float)P.y-points[end_gp->start].y)/count;
 					// end_gp->duration = TIME_TO_GROUP;
 					end_gp->start++;
 					end_gp->end++;
+					end_gp->collect_time_limit = t + TIME_TO_MOTION;
+				}
+				else if (diff < GROUP_SIZE_LIMIT_SQUARE) { // If near enough, do not change for coordinate of group
 					end_gp->collect_time_limit = t + TIME_TO_MOTION;
 				}
 				else { // If so far, make a new group. (* ready to track following points)
@@ -171,7 +179,7 @@ result Gesture::registerPoint(Point P, uint32_t t)
 					new_gp.duration = 0;
 					new_gp.start = new_gp.end = p_index;
 					new_gp.count = 1;
-					new_gp.collect_time_limit = 0; // it is not meaningful to set.
+					new_gp.collect_time_limit = 0; // it has no meaning.
 					groups.push_back(new_gp);
 				}
 			}
@@ -184,7 +192,7 @@ result Gesture::registerPoint(Point P, uint32_t t)
 			new_gp.duration = 0;
 			new_gp.start = new_gp.end = p_index;
 			new_gp.count = 1;
-			new_gp.collect_time_limit = 0; // it is not meaningful to set.
+			new_gp.collect_time_limit = 0; // it has no meaning.
 			groups.push_back(new_gp);
 		}
 
@@ -241,7 +249,7 @@ result Gesture::registerPoint(Point P, uint32_t t)
 					y[tmp] = (float) points[marked[tmp]].y;
 				}
 				// v case. 0.5 through 3
-				cout << "analyzing... ";
+				// cout << "analyzing... ";
 				if (marked.size() >= 3 && x[1] != x[0] && x[2] != x[1]) {
 					float slope1 = (y[0]-y[1])/(x[0]-x[1]);
 					float slope2 = (y[1]-y[2])/(x[1]-x[2]);
@@ -255,7 +263,7 @@ result Gesture::registerPoint(Point P, uint32_t t)
 						res.V2_y = y[1];
 						res.V3_x = x[2];
 						res.V3_y = y[2];
-						cout << "v shape found" << endl;
+						// cout << "v shape found" << endl;
 					}
 				}
 				else {

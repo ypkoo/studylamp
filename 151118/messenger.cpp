@@ -16,32 +16,44 @@
 #include "messenger.hpp"
 #include <stdio.h>
 
-Messenger::Messenger(const char *addr, int port){
+Messenger::Messenger(const char *addr, int sendPort, int recvPort){
 	int res = WSAStartup(MAKEWORD(2,2), &wsaData);
 	if (res != 0) {
-		printf("WSAStartup failed with error: %d\n", res);
+		fprintf(stderr, "WSAStartup failed with error: %d\n", res);
 		exit (1);
 	}
 
-	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (sock == INVALID_SOCKET){
-		printf("socket creation failed\n");
+	sendSock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	recvSock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (sendSock == INVALID_SOCKET || recvSock == INVALID_SOCKET){
+		fprintf(stderr, "socket creation failed\n");
 		exit (1);
 	}
+
+	sendAddr.sin_family = AF_INET;
+	sendAddr.sin_addr.s_addr = inet_addr(addr);
+	sendAddr.sin_port = htons(sendPort);
+	
 
 	recvAddr.sin_family = AF_INET;
 	recvAddr.sin_addr.s_addr = inet_addr(addr);
-	recvAddr.sin_port = htons(port);
-	// bind(sock, (SOCKADDR *)&service, sizeof(service));
+	recvAddr.sin_port = htons(recvPort);
+	recvAddrSize = sizeof(recvAddrSize);
+	
+	if (bind(recvSock, (SOCKADDR *)&recvAddr, sizeof(recvAddr)) == -1){
+		fprintf(stderr, "socket binding error\n");
+		exit (1);
+	}
 }
 
 Messenger::~Messenger(){
-	closesocket(sock);
+	closesocket(sendSock);
+	closesocket(recvSock);
 	WSACleanup();
 }
 
 int Messenger::send_message(void *buf, size_t size) {
-	int res = sendto(sock, (char *)buf, size, 0, (SOCKADDR *) &recvAddr, sizeof(recvAddr));
+	int res = sendto(sendSock, (char *) buf, size, 0, (SOCKADDR *) &sendAddr, sizeof(sendAddr));
 	if (res == SOCKET_ERROR)
 		return -1;
 	return res;
@@ -62,6 +74,12 @@ int Messenger::send_message(const char *format, ...) {
 	// buf[sz] = 0;
 	send_message((void *)buf, sz);
 	return sz;
+}
+int Messenger::receive_message(void *buf, size_t size) {
+	int res = recvfrom(recvSock, (char *) buf, size, 0, (SOCKADDR *) &recvAddr, &recvAddrSize);
+	if (res == SOCKET_ERROR)
+		return -1;
+	return res;
 }
 
 void Messenger::print_buf(void) {

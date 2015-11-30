@@ -28,12 +28,17 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <sstream>
+#include "common.hpp"
 #include "detector.hpp"
 #include "gesture.hpp"
+#include "buttonDetector.hpp"
 
 
 using namespace cv;
 using namespace std;
+
+#define UDP_BUFFER_SIZE 1024
 
 Point linear_trans(Point v, double cosv, double sinv) {
 	Point res;
@@ -42,6 +47,7 @@ Point linear_trans(Point v, double cosv, double sinv) {
 	return res;
 }
 
+// Get current time tick, with unit of milliseconds.
 unsigned int getTick(void) {
 	unsigned int tick;
 #ifdef _WIN32
@@ -78,47 +84,142 @@ int main(int argc, char **argv){
 		printf("Camera number %d, (w, h) = (%d, %d)\n", dev_num, cam_width, cam_height);
 	}
 
+	/* Other modules. */
 	Detector dtct;
+	ButtonDetector bd;
 	Gesture gest(cam_width, cam_height);
-	gesture::result res;
-
 #ifdef _WIN32
-	Messenger msg("127.0.0.1", 6974);
+	Messenger msg("127.0.0.1", 6974, 7469);
 #endif
 
-	Mat frame;
+	/* Objects */
+	Mat frame; // Original camera frame.
+	gesture::result res;
+	PROGRAM_STATUS program_status = STATUS_BOOKCOVER;
+	char udp_buffer[UDP_BUFFER_SIZE];
+	stringstream udp_buffer2;
+
+	/* Some processes before the loop */
 	VC>>frame;
+	bd.setInitFrame(frame);
 	// imwrite("output.bmp", frame);
 
-	for(;;) {
+	/* Main loop */
+	while(1) {
+		/* Receive message, to catch whether state changed or not. */
+#ifdef _WIN32
+		int bytes_read = 0;
+		while (bytes_read != UDP_BUFFER_SIZE){
+			bytes_read = msg.receive_message(udp_buffer, UDP_BUFFER_SIZE);
+		}
+		if (bytes_read != 0){
+#ifdef DEBUG
+			udp_buffer[bytes_read] = 0;
+			cout << "udp received: " << udp_buffer << endl;
+#endif
+			program_status = (enum PROGRAM_STATUS) (udp_buffer[bytes_read-1] -'0');
+		}
+#elif __APPLE__ // MACBOOK case
+		program_status = STATUS_STUDY_SOLVING; // to get gesture things.
+#endif
+
 		VC >> frame;
 
 		Mat bookImg;
 		int pageNum;
 		Point abspoint, relpoint;
-		dtct.detect(frame, bookImg, pageNum, relpoint);
+		Mat gestFrame;
 
-		abspoint = dtct.rel2abs(relpoint);
-		res = gest.registerPoint(abspoint, getTick());
+		switch (program_status){
+			case STATUS_BOOKCOVER:
+				udp_buffer2 << 0 << ';';
+				break;
+			case STATUS_MAINMENU:
+				udp_buffer2 << 1 << ';';
+				break;
+			case STATUS_STUDY_LEARNING:
+			case STATUS_STUDY_SOLVING:
+			case STATUS_STUDY_SOLVED:
+				udp_buffer2 << 2 << ';';
+				break;
+			case STATUS_PROGRESS:
+				udp_buffer2 << 3 << ';';
+				break;
+			case STATUS_REVIEW:
+				udp_buffer2 << 4 << ';';
+				break;
+		}
+
+		switch (program_status) {
+    		case STATUS_BOOKCOVER:     // 0
+    			/* PHASH */
+    			continue;
+    		case STATUS_STUDY_SOLVING: // 3
+    		case STATUS_STUDY_SOLVED:  // 4
+    			/* Processing on book, and gesture things.
+    			   Break should NOT be in this part,
+    			   since button processing also must be done in these states. */
+
+				dtct.detect(frame, bookImg, pageNum, relpoint);
+
+				abspoint = dtct.rel2abs(relpoint);
+				res = gest.registerPoint(abspoint, getTick());
 #ifdef DEBUG
-		gest.visualize(frame, getTick());
-		circle(frame, abspoint, 5, Scalar(0, 0, 255), CV_FILLED);
-		imshow("Gest", frame);
+				gestFrame = frame.clone();
+				gest.visualize(gestFrame, getTick());
+				circle(gestFrame, abspoint, 5, Scalar(0, 0, 255), CV_FILLED);
+				imshow("Gest", gestFrame);
 #endif
+				udp_buffer2 << bookImg.cols << ";"
+					<< bookImg.rows << ";"
+					<< relpoint.x << ";"
+					<< relpoint.y << ";";
+				if (res.type == gesture::V_TYPE){
+					Point vpoint(res.V2_x, res.V2_y);
+					Point avpoint = dtct.rel2abs(vpoint);
+					udp_buffer2 << vpoint.x << ";" << vpoint.y << ";";
+				}
+				else {
+					udp_buffer2 << "-1;-1;";
+				}
+				udp_buffer2 << pageNum << ";";
+				break;
+
+			case STATUS_MAINMENU:        // 1
+			case STATUS_STUDY_LEARNING:  // 2
+			case STATUS_PROGRESS:        // 5
+			case STATUS_REVIEW:          // 6
+				/* Button processing */
+				udp_buffer2 << "0;0;0;0;0;0;0;";
+
+		}
+
+		// this part of code can't be accessed for only STATUS_BOOKCOVER
+		vector<unsigned int> buttons = bd.registerFrame(frame);
+		int i;
+		for (i = 0; i < buttons.size(); i++)
+			udp_buffer2 << buttons[i];
+		string tmp = udp_buffer2.str();
 
 #ifdef _WIN32
-		if (res.type == gesture::V_TYPE) {
-			Point vpoint(res.V2_x, res.V2_y);
-			Point avpoint = dtct.rel2abs(vpoint);
-			msg.send_message ("%d;%d;%d;%d;%d;%d;%d",
-				bookImg.cols, bookImg.rows,
-				relpoint.x, relpoint.y, vpoint.x, vpoint.y, 41);
-		}
-		else
-			msg.send_message ("%d;%d;%d;%d;%d;%d;%d",
-				bookImg.cols, bookImg.rows,
-				relpoint.x, relpoint.y, -1, -1, 41);
+		msg.send_message(tmp.c_str(), tmp.length());
 #endif
+		udp_buffer2.clear();
+
+
+// #ifdef _WIN32
+// 		if (res.type == gesture::V_TYPE) {
+// 			Point vpoint(res.V2_x, res.V2_y);
+// 			Point avpoint = dtct.rel2abs(vpoint);
+// 			msg.send_message ("%d;%d;%d;%d;%d;%d;%d",
+// 				bookImg.cols, bookImg.rows,
+// 				relpoint.x, relpoint.y, vpoint.x, vpoint.y, 41);
+// 		}
+// 		else
+// 			msg.send_message ("%d;%d;%d;%d;%d;%d;%d",
+// 				bookImg.cols, bookImg.rows,
+// 				relpoint.x, relpoint.y, -1, -1, 41);
+// #endif
   		if(cv::waitKey(30) == char('q')) break;
 	}
 	VC.release();

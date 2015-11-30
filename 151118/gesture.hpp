@@ -5,6 +5,11 @@
 // 
 // @author S.H.Lee
 // 
+// @version 1.3
+// @since 2015-11-30
+// More natural recognition.
+// Behavior changed for interval on grouping
+// 
 // @version 1.2
 // @since 2015-11-26
 // Strengthen visualize()
@@ -53,13 +58,13 @@ namespace gesture{
 	};
 
 	struct group{
-		float x;
-		float y;
+		float x;           // points[start]~points[end]'s average x coordinate (sum divided by count)
+		float y;           // points[start]~points[end]'s average y coordinate (sum divided by count)
 		uint32_t duration; // if this is bigger than TIME_TO_GROUP, it means complete group.
 
 		size_t start;
 		size_t end;
-		size_t count; // same with end-start+1
+		size_t count;      // same with end-start+1
 
 		uint32_t collect_time_limit; // only valid for completed group.
 	};
