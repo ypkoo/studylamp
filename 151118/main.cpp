@@ -146,8 +146,11 @@ void myphash(Mat src, uint64_t &hash){
 int main(int argc, char **argv){
 	/* Parsing arguments */
 	int dev_num = 0;
+	int loop_period = 100;
 	if (argc >= 2)
 		sscanf(argv[1], "%d", &dev_num);
+	if (argc >= 3)
+		sscanf(argv[2], "%d", &loop_period);
 
 	/* Initialize camera device */
 	VideoCapture VC(dev_num);
@@ -192,7 +195,7 @@ int main(int argc, char **argv){
 	bool loop = true;
 	int loop_tick = getTick();
 	while(loop) {
-		if (getTick() - loop_tick < 500)
+		if (getTick() - loop_tick < loop_period)
 			continue;
 		else
 			loop_tick = getTick();
