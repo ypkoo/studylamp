@@ -13,8 +13,10 @@
 #define BUTTON_PRESS_TICK 500 //in ms
 #define BUTTON_PRESS_INTER_TICK 1500 //in ms
 
-ButtonDetector::ButtonDetector(unsigned int width, unsigned int height)
+ButtonDetector::ButtonDetector(unsigned int _width, unsigned int _height)
 {
+	width = _width;
+	height = _height;
 	projRect = Rect(980*width/2592,440*height/1944,650*width/2592,450*height/1944);
 	status = STATUS_BOOKCOVER; // 0
 	init();

@@ -137,9 +137,9 @@ int Detector::getPageNum(Mat src) {
 	api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
 	char *outText = api->GetUTF8Text();
 
-	if (strlen(outText) > 0)
-		cout << outText << endl;
-	return 0;
+	// if (strlen(outText) > 0)
+	// 	cout << outText << endl;
+	return atoi(outText);
 }
 
 Point Detector::rel2abs(Point p) {

@@ -34,8 +34,12 @@
 #include "gesture.hpp"
 #include "buttonDetector.hpp"
 
-#define HAVE_IMAGE_HASH
-#include <pHash.h>
+// #define HAVE_IMAGE_HASH
+// #define cimg_use_jpeg
+// #define cimg_use_png
+
+// // #include <pHash.h>
+// #include "phash/pHash.h"
 
 
 
@@ -43,6 +47,7 @@ using namespace cv;
 using namespace std;
 
 #define UDP_BUFFER_SIZE 1024
+char phash_file[100] = "phash.jpg";
 
 Point linear_trans(Point v, double cosv, double sinv) {
 	Point res;
@@ -62,6 +67,52 @@ unsigned int getTick(void) {
 	tick = tv.tv_usec / 1000 + tv.tv_sec * 1000;
 #endif
 	return tick;
+}
+
+void myphash(Mat src, uint64_t &hash){
+	// Mat src, dst, dst2, kernel;
+	Mat dst, dst2, kernel;
+	Mat chan[3];
+	vector<float> vec;
+
+	// src = imread (file);
+	// src = imread (file);
+	cvtColor(src, src, CV_BGR2YCrCb);
+
+	split(src, chan);
+
+	kernel = Mat::ones(7, 7, CV_32F) / (float)(49);
+	filter2D(chan[0], dst, -1, kernel, Point(-1, -1), 0, BORDER_REPLICATE); // BORDER_REPLICATE
+	resize(dst, dst, Size(32, 32), 0, 0, INTER_NEAREST); // INTER_NEAREST
+
+	dst.convertTo(dst2, CV_32FC1);
+	dct(dst2, dst2);
+
+	/* Get (1, 1) ~ (8, 8) rectangle */
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			vec.push_back(dst2.at<float>(i+1, j+1)); // k = 1
+		}
+	}
+
+	/* Get Median */
+	vector<float> med_sorted(vec);
+	nth_element(med_sorted.begin(), med_sorted.begin()+31, med_sorted.end());
+	float median = med_sorted[31];
+
+	/* TEST */
+	// for (int i = 0; i <64; i++)
+	// 	printf("%2d %+4.4f %+4.4f\n", i, vec[i], med_sorted[i]);
+
+	/* Calculate phash value */
+	uint64_t one = 1;
+	hash = 0;
+	for (int i=0; i<64; i++) {
+		float current = vec[i];
+		if (current > median)
+			hash |= one;
+		one = one << 1;
+	}
 }
 
 int main(int argc, char **argv){
@@ -105,15 +156,13 @@ int main(int argc, char **argv){
 
 	/* Some processes before the loop */
 	VC>>frame;
-		cout << 0 << endl;
 	bd.setInitFrame(frame);
 	// imwrite("output.bmp", frame);
-		cout << 0 << endl;
 
 	/* Main loop */
-	while(1) {
+	bool loop = true;
+	while(loop) {
 		/* Receive message, to catch whether state changed or not. */
-		cout << 0 << endl;
 #ifdef _WIN32
 		int bytes_read = 0;
 		char last_char = '\0';
@@ -122,7 +171,7 @@ int main(int argc, char **argv){
 			fprintf(stderr, "udp receive too much");
 			exit(1);
 		}
-		if (bytes_read != 0){
+		if (bytes_read != -1){
 #ifdef DEBUG
 			udp_buffer[bytes_read] = 0;
 			cout << "udp received: " << udp_buffer << endl;
@@ -132,54 +181,61 @@ int main(int argc, char **argv){
 #elif __APPLE__ // MACBOOK case
 		program_status = STATUS_STUDY_SOLVING; // to get gesture things.
 #endif
+		if(cv::waitKey(30) == char('0'))
+			program_status = (PROGRAM_STATUS) 0;
+		if(cv::waitKey(30) == char('1'))
+			program_status = (PROGRAM_STATUS) 1;
+		if(cv::waitKey(30) == char('2'))
+			program_status = (PROGRAM_STATUS) 2;
+		if(cv::waitKey(30) == char('3'))
+			program_status = (PROGRAM_STATUS) 3;
+		if(cv::waitKey(30) == char('4'))
+			program_status = (PROGRAM_STATUS) 4;
+		if(cv::waitKey(30) == char('5'))
+			program_status = (PROGRAM_STATUS) 5;
+		if(cv::waitKey(30) == char('6'))
+			program_status = (PROGRAM_STATUS) 6;
+		if(cv::waitKey(30) == char('7'))
+			program_status = (PROGRAM_STATUS) 7;
 
-
-		cout << (int)program_status << endl;
 		VC >> frame;
+		imshow("frameImg", frame);
 
 		Mat bookImg;
 		int pageNum;
 		Point abspoint, relpoint;
 		Mat gestFrame;
 
-		int hash_res;
+		uint64_t hash_val;
+		String tmp;
 
-
-		switch (program_status){
-			case STATUS_BOOKCOVER:
-				udp_buffer2 << 0 << ';';
-				break;
-			case STATUS_MAINMENU:
-				udp_buffer2 << 1 << ';';
-				break;
-			case STATUS_STUDY_LEARNING:
-			case STATUS_STUDY_SOLVING:
-			case STATUS_STUDY_SOLVED:
-				udp_buffer2 << 2 << ';';
-				break;
-			case STATUS_PROGRESS:
-				udp_buffer2 << 3 << ';';
-				break;
-			case STATUS_REVIEW:
-				udp_buffer2 << 4 << ';';
-				break;
-		}
+		udp_buffer2.str("");
+		udp_buffer2 << (int) program_status << ';';
 
 		switch (program_status) {
-    		case STATUS_BOOKCOVER:     // 0
-    			/* PHASH */
+			case STATUS_BOOKCOVER:     // 0
+				/* PHASH */
 				dtct.detect(frame, bookImg, pageNum, relpoint);
-    			imwrite ("phash.png", bookImg);
-    			ulong64 hs;
-    			hash_res = ph_dct_imagehash("phash.png", hs);
-    			udp_buffer2 << hs;
-    			continue;
-    		case STATUS_STUDY_SOLVING: // 3
-    		case STATUS_STUDY_SOLVED:  // 4
-    			/* Processing on book, and gesture things.
-    			   Break should NOT be in this part,
-    			   since button processing also must be done in these states. */
-
+				imshow("bookImg", bookImg);
+				// imwrite("bookImg.png", bookImg);
+				myphash(bookImg, hash_val);
+			 	udp_buffer2 << hash_val;
+#ifdef _WIN32
+				tmp = udp_buffer2.str();
+				for (int _index=0;_index<40;_index++) {
+					if (hash_val & (1<<_index))
+						cout << "*";
+					else
+						cout << " ";
+				}
+				cout << hash_val << endl;
+				msg.send_message(tmp.c_str(), tmp.length());
+#endif
+  				if(cv::waitKey(30) == char('q'))
+  					loop = false;
+				continue;
+			case STATUS_STUDY_SOLVING: // 3
+			case STATUS_STUDY_SOLVED:  // 4
 				dtct.detect(frame, bookImg, pageNum, relpoint);
 
 				abspoint = dtct.rel2abs(relpoint);
@@ -209,6 +265,7 @@ int main(int argc, char **argv){
 			case STATUS_STUDY_LEARNING:  // 2
 			case STATUS_PROGRESS:        // 5
 			case STATUS_REVIEW:          // 6
+			case STATUS_BUFFER:          // 7
 				/* Button processing */
 				udp_buffer2 << "0;0;0;0;0;0;0;";
 
@@ -219,12 +276,12 @@ int main(int argc, char **argv){
 		int i;
 		for (i = 0; i < buttons.size(); i++)
 			udp_buffer2 << buttons[i];
-		string tmp = udp_buffer2.str();
 
 #ifdef _WIN32
+		tmp = udp_buffer2.str();
 		msg.send_message(tmp.c_str(), tmp.length());
 #endif
-		udp_buffer2.clear();
+		udp_buffer2.str("");
 
 
 // #ifdef _WIN32
@@ -240,7 +297,8 @@ int main(int argc, char **argv){
 // 				bookImg.cols, bookImg.rows,
 // 				relpoint.x, relpoint.y, -1, -1, 41);
 // #endif
-  		if(cv::waitKey(30) == char('q')) break;
+  		if(cv::waitKey(30) == char('q'))
+  			loop = false;
 	}
 	VC.release();
 	destroyAllWindows();

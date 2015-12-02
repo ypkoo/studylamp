@@ -60,7 +60,6 @@ target/
 
 *.zip
 *.obj
-*.exe
 studyLamp
 
 # Compiled Object files
@@ -88,7 +87,6 @@ studyLamp
 *.lib
 
 # Executables
-*.exe
 *.out
 *.app
 

@@ -36,7 +36,7 @@ Messenger::Messenger(const char *addr, int sendPort, int recvPort){
 	
 
 	recvAddr.sin_family = AF_INET;
-	recvAddr.sin_addr.s_addr = inet_addr(addr);
+	recvAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	recvAddr.sin_port = htons(recvPort);
 	recvAddrSize = sizeof(recvAddrSize);
 	
@@ -54,8 +54,10 @@ Messenger::~Messenger(){
 
 int Messenger::send_message(void *buf, size_t size) {
 	int res = sendto(sendSock, (char *) buf, size, 0, (SOCKADDR *) &sendAddr, sizeof(sendAddr));
-	if (res == SOCKET_ERROR)
+	if (res == SOCKET_ERROR){
+		wprintf(L"sendto failed with error %d\n", WSAGetLastError());
 		return -1;
+	}
 	return res;
 }
 int Messenger::send_message(const char *format, ...) {
@@ -77,8 +79,10 @@ int Messenger::send_message(const char *format, ...) {
 }
 int Messenger::receive_message(void *buf, size_t size) {
 	int res = recvfrom(recvSock, (char *) buf, size, 0, (SOCKADDR *) &recvAddr, &recvAddrSize);
-	if (res == SOCKET_ERROR)
+	if (res == SOCKET_ERROR){
+		wprintf(L"recvfrom failed with error %d\n", WSAGetLastError());
 		return -1;
+	}
 	return res;
 }
 
