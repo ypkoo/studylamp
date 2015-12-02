@@ -79,14 +79,14 @@ void update_udp_state(Messenger *msg){
 	char res;
 	while (1) {
 		bytes_read = msg->receive_message(buf, UDP_BUFFER_SIZE);
-#ifdef DEBUG
-		buf[bytes_read] = 0;
-		cout << "udp received: " << buf << endl;
-#endif
 		if (bytes_read == UDP_BUFFER_SIZE) {
 			fprintf(stderr, "ERROR: message received from udp too much");
 			exit(1);
 		}
+#ifdef DEBUG
+		buf[bytes_read] = 0;
+		printf("[UDP RECEIVED] %s\n", buf);
+#endif
 		res = buf[bytes_read-1]-'0';
 		if (res != udp_state && getTick() - udp_last_tick > 1000){ /* state change needs 1 second */
 			udp_last_tick = getTick(); 

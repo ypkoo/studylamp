@@ -17,7 +17,7 @@ ButtonDetector::ButtonDetector(unsigned int _width, unsigned int _height)
 {
 	width = _width;
 	height = _height;
-	projRect = Rect(980*width/2592,440*height/1944,650*width/2592,450*height/1944);
+	projRect = Rect(980*width/2592,320*height/1944,650*width/2592,450*height/1944);
 	status = STATUS_BOOKCOVER; // 0
 	init();
 }
@@ -34,24 +34,25 @@ void ButtonDetector::init(){
 
 	for (int i = 0; i < NUMBER_OF_STATUS; ++i)
 	{
-		if (i==1)
+
+	if (i==1)
 		{
 
 			int bottomPadding = 150 * height/1944;
 			int buttonRadius = 50 * width/2592; // or 50 * 1944 / height
 
 			Mat buttonMask0(projRect.size(), CV_8U, Scalar::all(0));
-			circle(buttonMask0, Point(buttonMask0.size().width/4+20*width/2592,buttonMask0.size().height-bottomPadding-buttonRadius), buttonRadius, Scalar(255,255,255), -1);
+			circle(buttonMask0, Point(buttonMask0.size().width*9/32,buttonMask0.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), -1);
 			buttonMasks[i].push_back(buttonMask0);
 			thresholds[i].push_back(1000);
 
 			Mat buttonMask1(projRect.size(), CV_8U, Scalar::all(0));
-			circle(buttonMask1, Point(buttonMask1.size().width/2+5*width/2592,buttonMask1.size().height-bottomPadding-buttonRadius), buttonRadius, Scalar(255,255,255), -1);
+			circle(buttonMask1, Point(buttonMask1.size().width*16/32,buttonMask1.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), -1);
 			buttonMasks[i].push_back(buttonMask1);
 			thresholds[i].push_back(1000);
 
 			Mat buttonMask2(projRect.size(), CV_8U, Scalar::all(0));
-			circle(buttonMask2, Point(buttonMask2.size().width*3/4-15*width/2592,buttonMask2.size().height-bottomPadding-buttonRadius), buttonRadius, Scalar(255,255,255), -1);
+			circle(buttonMask2, Point(buttonMask2.size().width*23/32,buttonMask2.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), -1);
 			buttonMasks[i].push_back(buttonMask2);
 			thresholds[i].push_back(1000);
 
@@ -71,7 +72,7 @@ void ButtonDetector::init(){
 			thresholds[i].push_back(1000);
 
 			Mat shutDownButtonMask(projRect.size(), CV_8U, Scalar::all(0));
-			circle(shutDownButtonMask, Point(shutDownButtonMask.size().width-50*width/2592,50*1944/height), 30 * width/2592, Scalar(255,255,255), -1);
+			circle(shutDownButtonMask, Point(shutDownButtonMask.size().width-50*width/2592,50*height/1944), 30*width/2592, Scalar(255,255,255), -1);
 			buttonMasks[i].push_back(shutDownButtonMask);
 			thresholds[i].push_back(500);
 		}
