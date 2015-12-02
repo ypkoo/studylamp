@@ -181,21 +181,21 @@ int main(int argc, char **argv){
 #elif __APPLE__ // MACBOOK case
 		program_status = STATUS_STUDY_SOLVING; // to get gesture things.
 #endif
-		if(cv::waitKey(30) == char('0'))
+		if(cv::waitKey(30) == '0')
 			program_status = (PROGRAM_STATUS) 0;
-		if(cv::waitKey(30) == char('1'))
+		if(cv::waitKey(30) == '1')
 			program_status = (PROGRAM_STATUS) 1;
-		if(cv::waitKey(30) == char('2'))
+		if(cv::waitKey(30) == '2')
 			program_status = (PROGRAM_STATUS) 2;
-		if(cv::waitKey(30) == char('3'))
+		if(cv::waitKey(30) == '3')
 			program_status = (PROGRAM_STATUS) 3;
-		if(cv::waitKey(30) == char('4'))
+		if(cv::waitKey(30) == '4')
 			program_status = (PROGRAM_STATUS) 4;
-		if(cv::waitKey(30) == char('5'))
+		if(cv::waitKey(30) == '5')
 			program_status = (PROGRAM_STATUS) 5;
-		if(cv::waitKey(30) == char('6'))
+		if(cv::waitKey(30) == '6')
 			program_status = (PROGRAM_STATUS) 6;
-		if(cv::waitKey(30) == char('7'))
+		if(cv::waitKey(30) == '7')
 			program_status = (PROGRAM_STATUS) 7;
 
 		VC >> frame;
