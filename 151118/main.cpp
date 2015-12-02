@@ -190,7 +190,12 @@ int main(int argc, char **argv){
 
 	/* Main loop */
 	bool loop = true;
+	int loop_tick = getTick();
 	while(loop) {
+		if (getTick() - loop_tick < 500)
+			continue;
+		else
+			loop_tick = getTick();
 		/* Receive message, to catch whether state changed or not. */
 		// if(cv::waitKey(30) == '0')
 		// 	program_status = (PROGRAM_STATUS) 0;
