@@ -39,7 +39,7 @@ Messenger::Messenger(const char *addr, int sendPort, int recvPort){
 	// recvAddr.sin_addr.s_addr = inet_addr(addr);
 	recvAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	recvAddr.sin_port = htons(recvPort);
-	recvAddrSize = sizeof(recvAddrSize);
+	recvAddrSize = sizeof(sockaddr_in);
 	
 	if (bind(recvSock, (SOCKADDR *)&recvAddr, sizeof(recvAddr)) == -1){
 		fprintf(stderr, "socket binding error\n");

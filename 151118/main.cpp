@@ -40,14 +40,15 @@
 
 // // #include <pHash.h>
 // #include "phash/pHash.h"
-
-
+#include <thread>
 
 using namespace cv;
 using namespace std;
 
-#define UDP_BUFFER_SIZE 1024
 char phash_file[100] = "phash.jpg";
+
+char udp_state = 0;
+uint32_t udp_last_tick = 0;
 
 Point linear_trans(Point v, double cosv, double sinv) {
 	Point res;
@@ -69,6 +70,33 @@ unsigned int getTick(void) {
 	return tick;
 }
 
+// receiving UDP message
+#ifdef _WIN32
+#define UDP_BUFFER_SIZE 1024
+void update_udp_state(Messenger *msg){
+	int bytes_read;
+	char buf[UDP_BUFFER_SIZE];
+	char res;
+	while (1) {
+		bytes_read = msg->receive_message(buf, UDP_BUFFER_SIZE);
+#ifdef DEBUG
+		buf[bytes_read] = 0;
+		cout << "udp received: " << buf << endl;
+#endif
+		if (bytes_read == UDP_BUFFER_SIZE) {
+			fprintf(stderr, "ERROR: message received from udp too much");
+			exit(1);
+		}
+		res = buf[bytes_read-1]-'0';
+		if (res != udp_state && getTick() - udp_last_tick > 1000){ /* state change needs 1 second */
+			udp_last_tick = getTick(); 
+			udp_state = res;
+		}
+	}
+}
+#endif
+
+// phash function
 void myphash(Mat src, uint64_t &hash){
 	// Mat src, dst, dst2, kernel;
 	Mat dst, dst2, kernel;
@@ -145,13 +173,14 @@ int main(int argc, char **argv){
 	Gesture gest(cam_width, cam_height);
 #ifdef _WIN32
 	Messenger msg("127.0.0.1", 6974, 7469);
+	thread updating_thread(&update_udp_state, &msg);
+	updating_thread.detach();
 #endif
 
 	/* Objects */
 	Mat frame; // Original camera frame.
 	gesture::result res;
 	PROGRAM_STATUS program_status = STATUS_BOOKCOVER;
-	char udp_buffer[UDP_BUFFER_SIZE];
 	stringstream udp_buffer2;
 
 	/* Some processes before the loop */
@@ -163,40 +192,23 @@ int main(int argc, char **argv){
 	bool loop = true;
 	while(loop) {
 		/* Receive message, to catch whether state changed or not. */
-#ifdef _WIN32
-		int bytes_read = 0;
-		char last_char = '\0';
-		bytes_read = msg.receive_message(udp_buffer, UDP_BUFFER_SIZE);
-		if (bytes_read == UDP_BUFFER_SIZE) {
-			fprintf(stderr, "udp receive too much");
-			exit(1);
-		}
-		if (bytes_read != -1){
-#ifdef DEBUG
-			udp_buffer[bytes_read] = 0;
-			cout << "udp received: " << udp_buffer << endl;
-#endif
-			program_status = (enum PROGRAM_STATUS) (udp_buffer[bytes_read-1] -'0');
-		}
-#elif __APPLE__ // MACBOOK case
-		program_status = STATUS_STUDY_SOLVING; // to get gesture things.
-#endif
-		if(cv::waitKey(30) == '0')
-			program_status = (PROGRAM_STATUS) 0;
-		if(cv::waitKey(30) == '1')
-			program_status = (PROGRAM_STATUS) 1;
-		if(cv::waitKey(30) == '2')
-			program_status = (PROGRAM_STATUS) 2;
-		if(cv::waitKey(30) == '3')
-			program_status = (PROGRAM_STATUS) 3;
-		if(cv::waitKey(30) == '4')
-			program_status = (PROGRAM_STATUS) 4;
-		if(cv::waitKey(30) == '5')
-			program_status = (PROGRAM_STATUS) 5;
-		if(cv::waitKey(30) == '6')
-			program_status = (PROGRAM_STATUS) 6;
-		if(cv::waitKey(30) == '7')
-			program_status = (PROGRAM_STATUS) 7;
+		// if(cv::waitKey(30) == '0')
+		// 	program_status = (PROGRAM_STATUS) 0;
+		// if(cv::waitKey(30) == '1')
+		// 	program_status = (PROGRAM_STATUS) 1;
+		// if(cv::waitKey(30) == '2')
+		// 	program_status = (PROGRAM_STATUS) 2;
+		// if(cv::waitKey(30) == '3')
+		// 	program_status = (PROGRAM_STATUS) 3;
+		// if(cv::waitKey(30) == '4')
+		// 	program_status = (PROGRAM_STATUS) 4;
+		// if(cv::waitKey(30) == '5')
+		// 	program_status = (PROGRAM_STATUS) 5;
+		// if(cv::waitKey(30) == '6')
+		// 	program_status = (PROGRAM_STATUS) 6;
+		// if(cv::waitKey(30) == '7')
+		// 	program_status = (PROGRAM_STATUS) 7;
+		program_status = (PROGRAM_STATUS) udp_state;
 		bd.setStatus(program_status);
 
 		VC >> frame;
@@ -301,6 +313,10 @@ int main(int argc, char **argv){
   		if(cv::waitKey(30) == char('q'))
   			loop = false;
 	}
+#ifdef _WIN32
+	TerminateThread(updating_thread.native_handle(), 0);
+	WaitForSingleObject(updating_thread.native_handle(), INFINITE);
+#endif
 	VC.release();
 	destroyAllWindows();
 	return 0;
