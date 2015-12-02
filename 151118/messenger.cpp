@@ -36,6 +36,7 @@ Messenger::Messenger(const char *addr, int sendPort, int recvPort){
 	
 
 	recvAddr.sin_family = AF_INET;
+	// recvAddr.sin_addr.s_addr = inet_addr(addr);
 	recvAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	recvAddr.sin_port = htons(recvPort);
 	recvAddrSize = sizeof(recvAddrSize);

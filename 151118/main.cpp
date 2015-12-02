@@ -197,6 +197,7 @@ int main(int argc, char **argv){
 			program_status = (PROGRAM_STATUS) 6;
 		if(cv::waitKey(30) == '7')
 			program_status = (PROGRAM_STATUS) 7;
+		bd.setStatus(program_status);
 
 		VC >> frame;
 		imshow("frameImg", frame);
