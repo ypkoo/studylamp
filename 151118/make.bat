@@ -3,7 +3,7 @@ SET OPENCV_DIR=C:\opencv\
 SET TESSERACT_DIR=C:\tesseract\
 SET LEPT_DIR=C:\leptonica\
 
-SET CPP_FILES=main.cpp gesture.cpp messenger.cpp detector.cpp buttonDetector.cpp
+SET CPP_FILES=main.cpp gesture.cpp messenger.cpp detector.cpp buttonDetector.cpp settingLoader.cpp
 SET LIBS=
 SET INCLUDE_FOLDERS=
 SET LIB_PATH=

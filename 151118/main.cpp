@@ -29,10 +29,12 @@
 #include <vector>
 #include <cmath>
 #include <sstream>
+#include <inttypes.h>
 #include "common.hpp"
 #include "detector.hpp"
 #include "gesture.hpp"
 #include "buttonDetector.hpp"
+#include "settingLoader.hpp"
 
 // #define HAVE_IMAGE_HASH
 // #define cimg_use_jpeg
@@ -144,20 +146,17 @@ void myphash(Mat src, uint64_t &hash){
 }
 
 int main(int argc, char **argv){
-	/* Parsing arguments */
-	int dev_num = 0;
-	int loop_period = 100;
-	if (argc >= 2)
-		sscanf(argv[1], "%d", &dev_num);
-	if (argc >= 3)
-		sscanf(argv[2], "%d", &loop_period);
+	setting_init();
+	int dev_num = setting_load_u32 ("device_num", 0);
+	int loop_period = setting_load_u32 ("loop_minimum", 0);
+	int send_msg_period = setting_load_u32 ("send_msg_period", 100);
 
 	/* Initialize camera device */
 	VideoCapture VC(dev_num);
 	uint32_t cam_width = 0, cam_height = 0;
 	{
 		if (!VC.isOpened()) {
-			fprintf(stderr, "Failed to open device number with number %d\n", dev_num);
+			fprintf(stderr, "Failed to open device number '%d' for camera\n", dev_num);
 			return -1;
 		}
 		/* Set size as big enough, to get maximum size */
@@ -175,7 +174,7 @@ int main(int argc, char **argv){
 	ButtonDetector bd(cam_width, cam_height);
 	Gesture gest(cam_width, cam_height);
 #ifdef _WIN32
-	Messenger msg("127.0.0.1", 6974, 7469);
+	Messenger msg("127.0.0.1", setting_load_u32("send_port", 6974), setting_load_u32("recv_port", 7469));
 	thread updating_thread(&update_udp_state, &msg);
 	updating_thread.detach();
 #endif
@@ -184,16 +183,16 @@ int main(int argc, char **argv){
 	Mat frame; // Original camera frame.
 	gesture::result res;
 	PROGRAM_STATUS program_status = STATUS_BOOKCOVER;
-	stringstream udp_buffer2;
+	stringstream sending_msg_ss;
 
 	/* Some processes before the loop */
 	VC>>frame;
 	bd.setInitFrame(frame);
-	// imwrite("output.bmp", frame);
 
 	/* Main loop */
 	bool loop = true;
 	int loop_tick = getTick();
+	int send_tick = getTick();
 	while(loop) {
 		if (getTick() - loop_tick < loop_period)
 			continue;
@@ -230,8 +229,8 @@ int main(int argc, char **argv){
 		uint64_t hash_val;
 		String tmp;
 
-		udp_buffer2.str("");
-		udp_buffer2 << (int) program_status << ';';
+		sending_msg_ss.str("");
+		sending_msg_ss << (int) program_status << ';';
 
 		switch (program_status) {
 			case STATUS_BOOKCOVER:     // 0
@@ -240,19 +239,13 @@ int main(int argc, char **argv){
 				imshow("bookImg", bookImg);
 				// imwrite("bookImg.png", bookImg);
 				myphash(bookImg, hash_val);
-			 	udp_buffer2 << hash_val;
+			 	sending_msg_ss << hash_val;
 #ifdef _WIN32
-				tmp = udp_buffer2.str();
-				for (int _index=0;_index<40;_index++) {
-					if (hash_val & (1<<_index))
-						cout << "*";
-					else
-						cout << " ";
-				}
-				cout << hash_val << endl;
+				tmp = sending_msg_ss.str();
+				printf("hash_value %" PRIu64 "\n", hash_val);
 				msg.send_message(tmp.c_str(), tmp.length());
 #endif
-  				if(cv::waitKey(30) == char('q'))
+  				if(cv::waitKey(10) == char('q'))
   					loop = false;
 				continue;
 			case STATUS_STUDY_SOLVING: // 3
@@ -267,19 +260,17 @@ int main(int argc, char **argv){
 				circle(gestFrame, abspoint, 5, Scalar(0, 0, 255), CV_FILLED);
 				imshow("Gest", gestFrame);
 #endif
-				udp_buffer2 << bookImg.cols << ";"
+				sending_msg_ss << bookImg.cols << ";"
 					<< bookImg.rows << ";"
 					<< relpoint.x << ";"
 					<< relpoint.y << ";";
 				if (res.type == gesture::V_TYPE){
-					Point vpoint(res.V2_x, res.V2_y);
-					Point avpoint = dtct.rel2abs(vpoint);
-					udp_buffer2 << vpoint.x << ";" << vpoint.y << ";";
+					Point avpoint = dtct.abs2rel(Point(res.V2_x, res.V2_y));
+					sending_msg_ss << vpoint.x << ";" << vpoint.y << ";";
 				}
-				else {
-					udp_buffer2 << "-1;-1;";
-				}
-				udp_buffer2 << pageNum << ";";
+				else
+					sending_msg_ss << "-1;-1;";
+				sending_msg_ss << pageNum << ";";
 				break;
 
 			case STATUS_MAINMENU:        // 1
@@ -288,21 +279,21 @@ int main(int argc, char **argv){
 			case STATUS_REVIEW:          // 6
 			case STATUS_BUFFER:          // 7
 				/* Button processing */
-				udp_buffer2 << "0;0;0;0;0;0;0;";
+				sending_msg_ss << "0;0;0;0;0;0;0;";
 
 		}
 
+		// Button processing part
 		// this part of code can't be accessed for only STATUS_BOOKCOVER
 		vector<unsigned int> buttons = bd.registerFrame(frame);
 		int i;
 		for (i = 0; i < buttons.size(); i++)
-			udp_buffer2 << buttons[i];
+			sending_msg_ss << buttons[i];
 
 #ifdef _WIN32
-		tmp = udp_buffer2.str();
+		tmp = sending_msg_ss.str();
 		msg.send_message(tmp.c_str(), tmp.length());
 #endif
-		udp_buffer2.str("");
 
 
 // #ifdef _WIN32
@@ -318,7 +309,7 @@ int main(int argc, char **argv){
 // 				bookImg.cols, bookImg.rows,
 // 				relpoint.x, relpoint.y, -1, -1, 41);
 // #endif
-  		if(cv::waitKey(30) == char('q'))
+  		if(cv::waitKey(10) == char('q'))
   			loop = false;
 	}
 #ifdef _WIN32
