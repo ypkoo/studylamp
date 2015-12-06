@@ -47,7 +47,7 @@ using namespace std;
 
 char phash_file[100] = "phash.jpg";
 
-PROGRAM_STATUS udp_state = STATUS_BOOKCOVER;
+PROGRAM_STATUS udp_state;
 uint32_t udp_last_tick = 0;
 
 Point linear_trans(Point v, double cosv, double sinv) {
@@ -162,6 +162,7 @@ int main(int argc, char **argv){
 	Gesture gest(cam_width, cam_height);
 #ifdef _WIN32
 	Messenger msg("127.0.0.1", setting_load_u32("send_port", 6974), setting_load_u32("recv_port", 7469));
+	udp_state = (PROGRAM_STATUS) setting_load_u32 ("initial_state", 0);
 	udp_last_tick = getTick();
 	thread updating_thread(&update_udp_state, &msg);
 	updating_thread.detach();
