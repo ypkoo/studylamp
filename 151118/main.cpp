@@ -49,7 +49,7 @@ using namespace std;
 
 char phash_file[100] = "phash.jpg";
 
-char udp_state = 0;
+PROGRAM_STATUS udp_state = STATUS_BOOKCOVER;
 uint32_t udp_last_tick = 0;
 
 Point linear_trans(Point v, double cosv, double sinv) {
@@ -90,9 +90,11 @@ void update_udp_state(Messenger *msg){
 		printf("[UDP RECEIVED] %s\n", buf);
 #endif
 		res = buf[bytes_read-1]-'0';
-		if (res != udp_state && getTick() - udp_last_tick > 1000){ /* state change needs 1 second */
+		if (res != (char) udp_state
+			&& 0 <= res && res <= STATUS_MAX
+			&& getTick() - udp_last_tick > 1000) { /* state change needs 1 second */
 			udp_last_tick = getTick(); 
-			udp_state = res;
+			udp_state = (PROGRAM_STATUS) res;
 		}
 	}
 }
@@ -216,7 +218,7 @@ int main(int argc, char **argv){
 		// 	program_status = (PROGRAM_STATUS) 6;
 		// if(cv::waitKey(30) == '7')
 		// 	program_status = (PROGRAM_STATUS) 7;
-		program_status = (PROGRAM_STATUS) udp_state;
+		program_status = udp_state;
 		bd.setStatus(program_status);
 		bd.setInitFrame(frame);
 
@@ -247,7 +249,7 @@ int main(int argc, char **argv){
 				printf("hash_value %" PRIu64 "\n", hash_val);
 				msg.send_message(tmp.c_str(), tmp.length());
 #endif
-  				if(cv::waitKey(10) == char('q'))
+  				if(cv::waitKey(30) == char('q'))
   					loop = false;
 				continue;
 			case STATUS_STUDY_SOLVING: // 3
@@ -311,7 +313,7 @@ int main(int argc, char **argv){
 // 				bookImg.cols, bookImg.rows,
 // 				relpoint.x, relpoint.y, -1, -1, 41);
 // #endif
-  		if(cv::waitKey(10) == char('q'))
+  		if(cv::waitKey(30) == char('q'))
   			loop = false;
 	}
 #ifdef _WIN32

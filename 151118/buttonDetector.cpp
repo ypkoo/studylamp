@@ -5,11 +5,12 @@
 #include <sys/time.h>
 #endif
 
+#include "common.hpp"
 #include "buttonDetector.hpp"
 
 #define PI 3.14159
 #define NUMBER_OF_BUTTONS 3
-#define NUMBER_OF_STATUS 7
+#define NUMBER_OF_STATUS STATUS_MAX+1
 #define BUTTON_PRESS_TICK 500 //in ms
 #define BUTTON_PRESS_INTER_TICK 1500 //in ms
 

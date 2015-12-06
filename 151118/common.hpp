@@ -11,5 +11,6 @@ enum PROGRAM_STATUS {
     STATUS_REVIEW         = 6,
     STATUS_BUFFER         = 7
 };
+#define STATUS_MAX 7
 
 #endif
