@@ -19,6 +19,7 @@
 #include <cmath>
 #include <tesseract/baseapi.h>
 #include <leptonica/allheaders.h>
+#include "settingLoader.hpp"
 
 using namespace cv;
 using namespace std;
@@ -129,10 +130,17 @@ int Detector::getPageNum(Mat src) {
 		return -1;
 
 	/* Left page number */
-	rectangle(src, Rect(_width-50, _height-50, 30, 30), Scalar(0, 0, 255), 4);
-	imshow("getPageNum src", src);
+	int a, b, c, d;
+	a = setting_load_u32( "a", 0);
+	b = setting_load_u32( "b", 0);
+	c = setting_load_u32( "c", 0);
+	d = setting_load_u32( "d", 0);
+	Rect rc(_width-a, _height-b, c, d);
+	Mat visual(src);
+	// rectangle(visual, rc, Scalar(0, 0, 255), 4);
+	imshow("getPageNum src", visual);
 	if (src.size().height > 30 && src.size().width > 30)
-		pageImg = src(Rect(src.size().width-50, src.size().height-50, 50, 50));
+		pageImg = src(rc);
 	else
 		pageImg = src.clone();
 
@@ -141,22 +149,23 @@ int Detector::getPageNum(Mat src) {
 	GaussianBlur(pageImg, sharpen, Size(0,0), 3);
 	addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
 	cvtColor(sharpen, pageImg, CV_BGR2GRAY);
-	// imshow("6. Get page image", pageImg);
 
 	Mat bw;
 	inRange(pageImg, Scalar(0, 0, 0), Scalar(100, 100, 100), bw);
 	pyrUp(bw, bw);
 	medianBlur(bw, bw, 5);
 	pyrDown(bw, bw);
-
 	bitwise_not(bw, bw);
 	bw.copyTo(pageImg);
+	imshow("6. Get page image", pageImg);
 
-	api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
+
+	api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, pageImg.channels(), pageImg.step1());
+	api->Recognize(0);
 	char *outText = api->GetUTF8Text();
 
 	// if (strlen(outText) > 0)
-	// 	cout << outText << endl;
+		// cout << outText << ":"<< atoi(outText)<<endl;
 	return atoi(outText);
 }
 

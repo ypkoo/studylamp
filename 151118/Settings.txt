@@ -19,6 +19,11 @@ send_msg_period   300     # 메시지 보내는 최소 주기 (아직 구현 안
 
 send_port         6974    # udp 보내는 포트 번호
 recv_port         7469    # udp 받는 포트 번호
+a  70
+b   50
+c  50
+d  40
+
 
 test1   -341
 test2 f-30.247
