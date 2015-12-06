@@ -254,6 +254,7 @@ int main(int argc, char **argv){
 				continue;
 			case STATUS_STUDY_SOLVING: // 3
 			case STATUS_STUDY_SOLVED:  // 4
+			case STATUS_BUFFER:        // 7. It needs to send page number.
 				dtct.detect(frame, bookImg, pageNum, relpoint);
 
 				abspoint = dtct.rel2abs(relpoint);
@@ -281,7 +282,6 @@ int main(int argc, char **argv){
 			case STATUS_STUDY_LEARNING:  // 2
 			case STATUS_PROGRESS:        // 5
 			case STATUS_REVIEW:          // 6
-			case STATUS_BUFFER:          // 7
 				/* Button processing */
 				sending_msg_ss << "0;0;0;0;0;0;0;";
 
