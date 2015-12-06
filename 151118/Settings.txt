@@ -24,6 +24,8 @@ b   50
 c  50
 d  40
 
+gest:time_to_group   600       # 모션 시작점 최소 대기 시간 [milliseconds]
+gest:time_to_motion  1000      # 모션 시작부터 모션 정보 수집 시간 [milliseconds]
 
 test1   -341
 test2 f-30.247

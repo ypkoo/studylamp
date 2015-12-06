@@ -28,6 +28,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include "settingLoader.hpp"
 
 using namespace gesture;
 using namespace cv;
@@ -35,6 +36,8 @@ using namespace std;
 
 Gesture::Gesture(uint32_t w, uint32_t h)
 {
+	TIME_TO_GROUP = setting_load_u32("gest:time_to_group", 600); // the group object is complete or not
+	TIME_TO_MOTION = setting_load_u32("gest:time_to_motion", 1000);
 
 	points = (struct timePoint *) malloc(sizeof(struct timePoint) * POINT_COUNT);
 	p_index = 0;

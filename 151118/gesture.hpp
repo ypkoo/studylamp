@@ -41,8 +41,6 @@ namespace gesture{
 	// const size_t GROUP_COUNT = 100;
 
 	// const uint32_t NEW_GROUP_TIME = 800; // Is it really needed?
-	const uint32_t TIME_TO_GROUP = 800; // the group object is complete or not
-	const uint32_t TIME_TO_MOTION = 1000;
 
 #ifdef DEBUG
 	#define HISTORY_MAX_COUNT 10
@@ -103,6 +101,8 @@ private:
 	std::deque<struct gesture::group> groups;
 	std::vector<size_t> marked;
 
+	uint32_t TIME_TO_GROUP; // the group object is complete or not
+	uint32_t TIME_TO_MOTION;
 	uint32_t GROUP_SIZE_LIMIT_SQUARE;
 	uint32_t GROUP_DETAILED_SIZE_LIMIT_SQUARE;
 	float EPSILON;
