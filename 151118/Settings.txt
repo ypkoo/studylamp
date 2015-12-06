@@ -1,4 +1,4 @@
-# LINE = NOTHING
+﻿# LINE = NOTHING
 #        | #(any comments)
 #        | (name-without-space)[ \t]*(decimal-number)
 #        | (name-without-space)[ \t]*f(float-number)
@@ -14,7 +14,7 @@
 
 device_num        0       # 카메라 장비 번호
 loop_period       0       # 프로그램 주요 loop 실행 최소 주기
-send_msg_period   300     # 메시지 보내는 최소 주기
+send_msg_period   300     # 메시지 보내는 최소 주기 (아직 구현 안함)
 
 send_port         6974    # udp 보내는 포트 번호
 recv_port         7469    # udp 받는 포트 번호

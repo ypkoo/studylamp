@@ -218,6 +218,7 @@ int main(int argc, char **argv){
 		// 	program_status = (PROGRAM_STATUS) 7;
 		program_status = (PROGRAM_STATUS) udp_state;
 		bd.setStatus(program_status);
+		bd.setInitFrame(frame);
 
 		VC >> frame;
 		imshow("frameImg", frame);
