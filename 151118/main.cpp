@@ -175,6 +175,7 @@ int main(int argc, char **argv){
 	Gesture gest(cam_width, cam_height);
 #ifdef _WIN32
 	Messenger msg("127.0.0.1", setting_load_u32("send_port", 6974), setting_load_u32("recv_port", 7469));
+	udp_last_tick = getTick();
 	thread updating_thread(&update_udp_state, &msg);
 	updating_thread.detach();
 #endif
@@ -266,7 +267,7 @@ int main(int argc, char **argv){
 					<< relpoint.y << ";";
 				if (res.type == gesture::V_TYPE){
 					Point avpoint = dtct.abs2rel(Point(res.V2_x, res.V2_y));
-					sending_msg_ss << vpoint.x << ";" << vpoint.y << ";";
+					sending_msg_ss << avpoint.x << ";" << avpoint.y << ";";
 				}
 				else
 					sending_msg_ss << "-1;-1;";

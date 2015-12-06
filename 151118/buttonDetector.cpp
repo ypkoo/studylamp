@@ -155,14 +155,16 @@ vector<unsigned int> ButtonDetector::registerFrame(Mat newFrame){
 	medianBlur(binary, binary, 3);
 	imshow("binary", binary);
 
-	unsigned int buttonWhites = 0;
-	unsigned int totalWhites = countNonZero(binary == 255);
+	addWeighted(initProjFrame, 0.98, projFrame, 0.02, 0.0, initProjFrame);
+
+	// unsigned int buttonWhites = 0;
+	// unsigned int totalWhites = countNonZero(binary == 255);
 
 	for (int i = 0; i < buttonMasks[status].size(); ++i)
 	{
 		Mat buttonDiff = binary & buttonMasks[status][i];
 		int countWhite = countNonZero(buttonDiff == 255);
-		buttonWhites += countWhite;
+		// buttonWhites += countWhite;
 		if (countWhite > thresholds[status][i])
 		{
 			pushedButtons.push_back(1);
@@ -173,11 +175,12 @@ vector<unsigned int> ButtonDetector::registerFrame(Mat newFrame){
 		}
 	}
 
-	cout << "totalWhites " << totalWhites << " buttonWhites " << buttonWhites;
-	if ((totalWhites > 1000*width*height/(2592*1944) && totalWhites > buttonWhites * 10) || totalWhites > 10000*width*height/(2592*1944) ){
-		cout << " reset frame";
-		setInitFrame(newFrame);
-	}
+	// cout << "totalWhites " << totalWhites << " buttonWhites " << buttonWhites;
+	// if ((totalWhites > 1000*width*height/(2592*1944) && totalWhites > buttonWhites * 10) || totalWhites > 10000*width*height/(2592*1944) ){
+		// cout << " reset frame";
+		// setInitFrame(newFrame);
+	// }
+
 	cout << endl;
 
 	return pushedButtons;
