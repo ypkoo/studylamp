@@ -128,16 +128,16 @@ vector<unsigned int> ButtonDetector::registerFrame(Mat newFrame){
 
 	// circle(projFrame, Point(projFrame.size().width-50,50), 30, Scalar(255,255,255), 2);
 
-	rectangle(projFrame, Rect(150*width/2592, 150*height/1944, projFrame.size().width-150*2*width/2592, 200*height/1944), Scalar(255,255,255), 2);
-	rectangle(projFrame, Rect(200*width/2592, 150*height/1944, projFrame.size().width-200*2*width/2592, 150*height/1944), Scalar(0,0,0), 2);
-	circle(projFrame, Point(projFrame.size().width-45*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
-	circle(projFrame, Point(projFrame.size().width-45*width/2592,55*height/1944), 30*width/2592, Scalar(255,255,255), 2);
-	circle(projFrame, Point(projFrame.size().width*9/32,projFrame.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), 2);
-	circle(projFrame, Point(projFrame.size().width*16/32,projFrame.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), 2);
-	circle(projFrame, Point(projFrame.size().width*23/32,projFrame.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), 2);
-	circle(projFrame, Point(projFrame.size().width*9/32,projFrame.size().height-50*height/1944), 50*width/2592, Scalar(255,255,255), 2);
-	circle(projFrame, Point(projFrame.size().width*16/32,projFrame.size().height-50*height/1944), 50*width/2592, Scalar(255,255,255), 2);
-	circle(projFrame, Point(projFrame.size().width*23/32,projFrame.size().height-50*height/1944), 50*width/2592, Scalar(255,255,255), 2);
+	// rectangle(projFrame, Rect(150*width/2592, 150*height/1944, projFrame.size().width-150*2*width/2592, 200*height/1944), Scalar(255,255,255), 2);
+	// rectangle(projFrame, Rect(200*width/2592, 150*height/1944, projFrame.size().width-200*2*width/2592, 150*height/1944), Scalar(0,0,0), 2);
+	// circle(projFrame, Point(projFrame.size().width-45*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
+	// circle(projFrame, Point(projFrame.size().width-45*width/2592,55*height/1944), 30*width/2592, Scalar(255,255,255), 2);
+	// circle(projFrame, Point(projFrame.size().width*9/32,projFrame.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), 2);
+	// circle(projFrame, Point(projFrame.size().width*16/32,projFrame.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), 2);
+	// circle(projFrame, Point(projFrame.size().width*23/32,projFrame.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), 2);
+	// circle(projFrame, Point(projFrame.size().width*9/32,projFrame.size().height-50*height/1944), 50*width/2592, Scalar(255,255,255), 2);
+	// circle(projFrame, Point(projFrame.size().width*16/32,projFrame.size().height-50*height/1944), 50*width/2592, Scalar(255,255,255), 2);
+	// circle(projFrame, Point(projFrame.size().width*23/32,projFrame.size().height-50*height/1944), 50*width/2592, Scalar(255,255,255), 2);
 
 	imshow("projRegion", projFrame);
 

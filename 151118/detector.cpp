@@ -121,7 +121,16 @@ int Detector::getPageNum(Mat src) {
 	// if (src.size().height > 30 && src.size().width > 30)
 	// 	pageImg = src(Rect(20, src.size().height-30, 50, 30));
 
+	/* Don't do anything for some exceptional cases*/
+	int _width = src.size().width;
+	int _height = src.size().height;
+	float _ratio = (float)_width / _height;
+	if (_ratio < 1.3 || _ratio > 1.7)
+		return -1;
+
 	/* Left page number */
+	rectangle(src, Rect(_width-50, _height-50, 30, 30), Scalar(0, 0, 255), 4);
+	imshow("getPageNum src", src);
 	if (src.size().height > 30 && src.size().width > 30)
 		pageImg = src(Rect(src.size().width-50, src.size().height-50, 50, 50));
 	else
@@ -132,14 +141,14 @@ int Detector::getPageNum(Mat src) {
 	GaussianBlur(pageImg, sharpen, Size(0,0), 3);
 	addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
 	cvtColor(sharpen, pageImg, CV_BGR2GRAY);
-	imshow("6. Get page image", pageImg);
+	// imshow("6. Get page image", pageImg);
 
 	Mat bw;
 	inRange(pageImg, Scalar(0, 0, 0), Scalar(100, 100, 100), bw);
 	pyrUp(bw, bw);
 	medianBlur(bw, bw, 5);
 	pyrDown(bw, bw);
-	
+
 	bitwise_not(bw, bw);
 	bw.copyTo(pageImg);
 

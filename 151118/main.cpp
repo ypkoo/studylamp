@@ -160,9 +160,9 @@ int main(int argc, char **argv){
 	Detector dtct;
 	ButtonDetector bd(cam_width, cam_height);
 	Gesture gest(cam_width, cam_height);
+	udp_state = (PROGRAM_STATUS) setting_load_u32 ("initial_state", 0);
 #ifdef _WIN32
 	Messenger msg("127.0.0.1", setting_load_u32("send_port", 6974), setting_load_u32("recv_port", 7469));
-	udp_state = (PROGRAM_STATUS) setting_load_u32 ("initial_state", 0);
 	udp_last_tick = getTick();
 	thread updating_thread(&update_udp_state, &msg);
 	updating_thread.detach();

@@ -12,8 +12,8 @@
 # SETTING4 f0.3
 # SETTING5 f-3.132
 
-device_num        0       # 카메라 장비 번호
-initial_state     0       # 초기 state (0~7 사이 값)
+device_num        1       # 카메라 장비 번호
+initial_state     3       # 초기 state (0~7 사이 값)
 loop_minimum      100     # 프로그램 주요 loop 실행 최소 주기 [milliseconds]
 send_msg_period   300     # 메시지 보내는 최소 주기 (아직 구현 안함)
 
