@@ -240,6 +240,7 @@ int main(int argc, char **argv){
   				if(cv::waitKey(30) == char('q'))
   					loop = false;
 				continue;
+			case STATUS_STUDY_LEARNING:  // 2
 			case STATUS_STUDY_SOLVING: // 3
 			case STATUS_STUDY_SOLVED:  // 4
 			case STATUS_BUFFER:        // 7. It needs to send page number.
@@ -267,7 +268,6 @@ int main(int argc, char **argv){
 				break;
 
 			case STATUS_MAINMENU:        // 1
-			case STATUS_STUDY_LEARNING:  // 2
 			case STATUS_PROGRESS:        // 5
 			case STATUS_REVIEW:          // 6
 				/* Button processing */
