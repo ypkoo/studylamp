@@ -204,9 +204,11 @@ int main(int argc, char **argv){
 		// 	program_status = (PROGRAM_STATUS) 6;
 		// if(cv::waitKey(30) == '7')
 		// 	program_status = (PROGRAM_STATUS) 7;
-		program_status = udp_state;
-		bd.setStatus(program_status);
-		bd.setInitFrame(frame);
+		if (program_status != udp_state){
+			program_status = udp_state;
+			bd.setStatus(program_status);
+			bd.setInitFrame(frame);	
+		}
 
 		VC >> frame;
 		imshow("frameImg", frame);
