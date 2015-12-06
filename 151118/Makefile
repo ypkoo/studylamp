@@ -9,7 +9,7 @@ else
 MYFLAG += -DDEBUG
 endif
 
-SRCS = main.cpp gesture.cpp detector.cpp settingLoader.cpp buttonDetector.cpp
+SRCS = main.cpp gesture.cpp detector.cpp settingLoader.cpp buttonDetector.cpp common.cpp
 TARGET = studyLamp
 
 all:

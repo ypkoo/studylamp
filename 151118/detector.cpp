@@ -134,6 +134,15 @@ int Detector::getPageNum(Mat src) {
 	cvtColor(sharpen, pageImg, CV_BGR2GRAY);
 	imshow("6. Get page image", pageImg);
 
+	Mat bw;
+	inRange(pageImg, Scalar(0, 0, 0), Scalar(100, 100, 100), bw);
+	pyrUp(bw, bw);
+	medianBlur(bw, bw, 5);
+	pyrDown(bw, bw);
+	
+	bitwise_not(bw, bw);
+	bw.copyTo(pageImg);
+
 	api->SetImage((uchar*)pageImg.data, pageImg.cols, pageImg.rows, 1, pageImg.cols);
 	char *outText = api->GetUTF8Text();
 

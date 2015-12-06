@@ -15,8 +15,6 @@
 #ifdef _WIN32
 #include <windows.h>
 #include "messenger.hpp"
-#elif __APPLE__
-#include <sys/time.h>
 #endif
 
 #include <opencv2/imgproc/imgproc.hpp>
@@ -57,19 +55,6 @@ Point linear_trans(Point v, double cosv, double sinv) {
 	res.x = (int)(  cosv  * v.x + sinv * v.y);
 	res.y = (int)((-sinv) * v.x + cosv * v.y);
 	return res;
-}
-
-// Get current time tick, with unit of milliseconds.
-unsigned int getTick(void) {
-	unsigned int tick;
-#ifdef _WIN32
-	tick = GetTickCount();
-#elif __APPLE__
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	tick = tv.tv_usec / 1000 + tv.tv_sec * 1000;
-#endif
-	return tick;
 }
 
 // receiving UDP message
@@ -297,6 +282,7 @@ int main(int argc, char **argv){
 #ifdef _WIN32
 		tmp = sending_msg_ss.str();
 		msg.send_message(tmp.c_str(), tmp.length());
+		cout << "send message: " << tmp << endl;
 #endif
 
 

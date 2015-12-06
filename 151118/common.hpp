@@ -1,6 +1,7 @@
 #ifndef _COMMON_HPP_
 #define _COMMON_HPP_
 
+
 enum PROGRAM_STATUS {
     STATUS_BOOKCOVER      = 0,
     STATUS_MAINMENU       = 1,
@@ -12,5 +13,8 @@ enum PROGRAM_STATUS {
     STATUS_BUFFER         = 7
 };
 #define STATUS_MAX 7
+
+// Get current time tick, with unit of milliseconds.
+unsigned int getTick(void);
 
 #endif

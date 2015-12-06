@@ -1,9 +1,3 @@
-#ifdef _WIN32
-#include <windows.h>
-#include "messenger.hpp"
-#elif __APPLE__
-#include <sys/time.h>
-#endif
 
 #include "common.hpp"
 #include "buttonDetector.hpp"
@@ -182,7 +176,7 @@ vector<unsigned int> ButtonDetector::registerFrame(Mat newFrame){
 		// setInitFrame(newFrame);
 	// }
 
-	cout << endl;
+	// cout << endl;
 
 	return pushedButtons;
 }
