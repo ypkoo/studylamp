@@ -136,10 +136,7 @@ int Detector::getPageNum(Mat src) {
 	c = setting_load_u32( "c", 0);
 	d = setting_load_u32( "d", 0);
 	Rect rc(_width-a, _height-b, c, d);
-	Mat visual(src);
-	// rectangle(visual, rc, Scalar(0, 0, 255), 4);
-	imshow("getPageNum src", visual);
-	if (src.size().height > 30 && src.size().width > 30)
+	if (_width > a && _height > b)
 		pageImg = src(rc);
 	else
 		pageImg = src.clone();
@@ -179,11 +176,12 @@ Point Detector::rel2abs(Point p) {
 }
 
 Point Detector::abs2rel(Point p) {
-	Point res = p - bookCoord;
+	Point tmp = p - bookCoord;
+	Point res;
 	float cosv = cos(PI*angle/180);
 	float sinv = sin(PI*angle/180);
-	res.x = (int)(  cosv  * p.x + sinv * p.y);
-	res.y = (int)(-(sinv) * p.x + cosv * p.y);
+	res.x = (int)(  cosv  * tmp.x + sinv * tmp.y);
+	res.y = (int)(-(sinv) * tmp.x + cosv * tmp.y);
 	return res;
 }
 

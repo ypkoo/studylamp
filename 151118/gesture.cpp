@@ -44,7 +44,7 @@ Gesture::Gesture(uint32_t w, uint32_t h)
 
 	GROUP_SIZE_LIMIT_SQUARE = h*h/(120 * 120);
 	GROUP_DETAILED_SIZE_LIMIT_SQUARE = h*h/(150 * 150);
-	EPSILON = h/200.0;
+	EPSILON = h*setting_load_float("gest:epsilon", 0.005);
 
 #ifdef DEBUG
 	size_t *buf;

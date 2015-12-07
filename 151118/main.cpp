@@ -77,7 +77,7 @@ void update_udp_state(Messenger *msg){
 		res = buf[bytes_read-1]-'0';
 		if (res != (char) udp_state
 			&& 0 <= res && res <= STATUS_MAX
-			&& getTick() - udp_last_tick > 1000) { /* state change needs 1 second */
+			&& getTick() - udp_last_tick > 400) { /* state change needs 1 second */
 			udp_last_tick = getTick(); 
 			udp_state = (PROGRAM_STATUS) res;
 		}
@@ -132,6 +132,14 @@ void myphash(Mat src, uint64_t &hash){
 	}
 }
 
+/* To get evaluation time for each functions. */
+uint32_t prevTime = 0;
+void debug_time(char *func, bool last) {
+	uint32_t new_tick = getTick();
+	printf("%s:%7d%c", func, new_tick - prevTime, (last) ? '\n':' ');
+	prevTime = new_tick;
+}
+
 int main(int argc, char **argv){
 	setting_init();
 	int dev_num = setting_load_u32 ("device_num", 0);
@@ -172,38 +180,30 @@ int main(int argc, char **argv){
 	Mat frame; // Original camera frame.
 	gesture::result res;
 	PROGRAM_STATUS program_status = STATUS_BOOKCOVER;
-	stringstream sending_msg_ss;
+	bool loop = true;
+	uint64_t hash_val;
+	uint32_t bWidth, bHeight;  // book width and height
+	uint32_t tipX, tipY;       // x, y coordinate of the tip
+	uint32_t checkX, checkY;   // x, y coordinate of checked location
+	int32_t pageNum;
+	char key;                  // returned value from waitKey(30)
 
 	/* Some processes before the loop */
 	VC>>frame;
+	int loop_tick = getTick();
+	int send_tick = getTick();
 	bd.setInitFrame(frame);
 
 	/* Main loop */
-	bool loop = true;
-	int loop_tick = getTick();
-	int send_tick = getTick();
 	while(loop) {
+		/* Program wait for loop_period. */
 		if (getTick() - loop_tick < loop_period)
 			continue;
 		else
 			loop_tick = getTick();
-		/* Receive message, to catch whether state changed or not. */
-		// if(cv::waitKey(30) == '0')
-		// 	program_status = (PROGRAM_STATUS) 0;
-		// if(cv::waitKey(30) == '1')
-		// 	program_status = (PROGRAM_STATUS) 1;
-		// if(cv::waitKey(30) == '2')
-		// 	program_status = (PROGRAM_STATUS) 2;
-		// if(cv::waitKey(30) == '3')
-		// 	program_status = (PROGRAM_STATUS) 3;
-		// if(cv::waitKey(30) == '4')
-		// 	program_status = (PROGRAM_STATUS) 4;
-		// if(cv::waitKey(30) == '5')
-		// 	program_status = (PROGRAM_STATUS) 5;
-		// if(cv::waitKey(30) == '6')
-		// 	program_status = (PROGRAM_STATUS) 6;
-		// if(cv::waitKey(30) == '7')
-		// 	program_status = (PROGRAM_STATUS) 7;
+
+debug_time("s", 0);
+		/* Status changed */
 		if (program_status != udp_state){
 			program_status = udp_state;
 			bd.setStatus(program_status);
@@ -211,18 +211,11 @@ int main(int argc, char **argv){
 		}
 
 		VC >> frame;
-		imshow("frameImg", frame);
+		imshow("Original", frame);
 
 		Mat bookImg;
-		int pageNum;
 		Point abspoint, relpoint;
 		Mat gestFrame;
-
-		uint64_t hash_val;
-		String tmp;
-
-		sending_msg_ss.str("");
-		sending_msg_ss << (int) program_status << ';';
 
 		switch (program_status) {
 			case STATUS_BOOKCOVER:     // 0
@@ -231,61 +224,63 @@ int main(int argc, char **argv){
 				imshow("bookImg", bookImg);
 				// imwrite("bookImg.png", bookImg);
 				myphash(bookImg, hash_val);
-			 	sending_msg_ss << hash_val;
+				// printf("hash_value %" PRIu64 "\n", hash_val);
 #ifdef _WIN32
-				tmp = sending_msg_ss.str();
-				printf("hash_value %" PRIu64 "\n", hash_val);
-				msg.send_message(tmp.c_str(), tmp.length());
+				msg.send_message("%d;%" PRIu64 , (int) program_status, hash_val);
+				// msg.print_buf();
 #endif
-  				if(cv::waitKey(30) == char('q'))
-  					loop = false;
+				key = cv::waitKey (30);
+				if (key == 'q')
+					loop = false;
 				continue;
 			case STATUS_STUDY_LEARNING:  // 2
 			case STATUS_STUDY_SOLVING: // 3
 			case STATUS_STUDY_SOLVED:  // 4
 			case STATUS_BUFFER:        // 7. It needs to send page number.
+debug_time("befdet", 0);
 				dtct.detect(frame, bookImg, pageNum, relpoint);
+debug_time("det", 0);
 
 				abspoint = dtct.rel2abs(relpoint);
 				res = gest.registerPoint(abspoint, getTick());
+debug_time("reg", 0);
 #ifdef DEBUG
 				gestFrame = frame.clone();
 				gest.visualize(gestFrame, getTick());
 				circle(gestFrame, abspoint, 5, Scalar(0, 0, 255), CV_FILLED);
 				imshow("Gest", gestFrame);
 #endif
-				sending_msg_ss << bookImg.cols << ";"
-					<< bookImg.rows << ";"
-					<< relpoint.x << ";"
-					<< relpoint.y << ";";
-				if (res.type == gesture::V_TYPE){
-					Point avpoint = dtct.abs2rel(Point(res.V2_x, res.V2_y));
-					sending_msg_ss << avpoint.x << ";" << avpoint.y << ";";
+				bWidth = bookImg.cols; bHeight = bookImg.rows;
+				tipX = relpoint.x; tipY = relpoint.y;
+				if (res.type == gesture::V_TYPE) {
+					Point relCheckedPoint = dtct.abs2rel(Point(res.V2_x, res.V2_y));
+					checkX = relCheckedPoint.x; checkY = relCheckedPoint.y;
 				}
-				else
-					sending_msg_ss << "-1;-1;";
-				sending_msg_ss << pageNum << ";";
+				else {
+					checkX = -1; checkY = -1;
+				}
+debug_time("etc", 0);
+
+
 				break;
 
 			case STATUS_MAINMENU:        // 1
 			case STATUS_PROGRESS:        // 5
 			case STATUS_REVIEW:          // 6
 				/* Button processing */
-				sending_msg_ss << "0;0;0;0;0;0;0;";
-
+				bWidth = bHeight = tipX = tipY = checkX = checkY = pageNum = 0;
 		}
 
 		// Button processing part
 		// this part of code can't be accessed for only STATUS_BOOKCOVER
+		stringstream button_ss;
 		vector<unsigned int> buttons = bd.registerFrame(frame);
-		int i;
-		for (i = 0; i < buttons.size(); i++)
-			sending_msg_ss << buttons[i];
+		copy(buttons.begin(), buttons.end(), ostream_iterator<int>(button_ss));
+debug_time("but", 1);
 
 #ifdef _WIN32
-		tmp = sending_msg_ss.str();
-		msg.send_message(tmp.c_str(), tmp.length());
-		cout << "send message: " << tmp << endl;
+		msg.send_message("%d;%d;%d;%d;%d;%d;%d;%d;%s", (int)program_status, bWidth, bHeight, tipX, tipY, checkX, checkY, pageNum, button_ss.str().c_str());
+		// msg.print_buf();
 #endif
 
 
@@ -302,14 +297,15 @@ int main(int argc, char **argv){
 // 				bookImg.cols, bookImg.rows,
 // 				relpoint.x, relpoint.y, -1, -1, 41);
 // #endif
-  		if(cv::waitKey(30) == char('q'))
-  			loop = false;
+		key = cv::waitKey(30);
+		if (key == 'q')
+			loop = false;
 	}
 #ifdef _WIN32
 	TerminateThread(updating_thread.native_handle(), 0);
 	WaitForSingleObject(updating_thread.native_handle(), INFINITE);
 #endif
-	VC.release();
 	destroyAllWindows();
+	VC.release();
 	return 0;
 }
