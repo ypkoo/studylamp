@@ -136,7 +136,7 @@ void myphash(Mat src, uint64_t &hash){
 uint32_t prevTime = 0;
 void debug_time(char *func, bool last) {
 	uint32_t new_tick = getTick();
-	printf("%s:%7d%c", func, new_tick - prevTime, (last) ? '\n':' ');
+	// printf("%s:%7d%c", func, new_tick - prevTime, (last) ? '\n':' ');
 	prevTime = new_tick;
 }
 

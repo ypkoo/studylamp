@@ -38,7 +38,7 @@ int Detector::findBiggestContour(vector<vector<Point> > contours) {
 	 int indexOfBiggestContour = -1;
 	 int sizeOfBiggestContour = 0;
 	 for (int i = 0; i < contours.size(); i++){
-		  if(contours[i].size() > sizeOfBiggestContour){
+		  if(contours[i].size() > 120 && contours[i].size() > sizeOfBiggestContour){
 				sizeOfBiggestContour = contours[i].size();
 				indexOfBiggestContour = i;
 		  }
