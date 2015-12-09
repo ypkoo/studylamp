@@ -90,7 +90,12 @@ void ButtonDetector::init(){
 			Mat backButtonMask(projRect.size(), CV_8U, Scalar::all(0));
 			circle(backButtonMask, Point(backButtonMask.size().width-45*width/2592,backButtonMask.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), -1);
 			buttonMasks[i].push_back(backButtonMask);
-			thresholds[i].push_back(1000);   
+			thresholds[i].push_back(1000);
+
+			Mat backButtonMask0(projRect.size(), CV_8U, Scalar::all(0));
+			circle(backButtonMask0, Point(640*width/2592,460*height/1944), 60*width/2592, Scalar(255,255,255), -1);
+			buttonMasks[i].push_back(backButtonMask0);
+			thresholds[i].push_back(2000);   
 		}
 		else if (i==5) {
 			Mat backButtonMask(projRect.size(), CV_8U, Scalar::all(0));
