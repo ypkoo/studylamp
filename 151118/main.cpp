@@ -192,7 +192,7 @@ int main(int argc, char **argv){
 	VC>>frame;
 	int loop_tick = getTick();
 	int send_tick = getTick();
-	int state_changed_tick = getTick();
+	int state_changed_tick = -1;
 	int tick_to_change_state = setting_load_u32 ("change_time", 15000);
 	bd.setInitFrame(frame);
 
@@ -206,10 +206,15 @@ int main(int argc, char **argv){
 
 debug_time("s", 0);
 		/* Status changed */
-		if (program_status != udp_state && (getTick() - state_changed_tick) > tick_to_change_state){
-			program_status = udp_state;
-			bd.setStatus(program_status);
-			bd.setInitFrame(frame);	
+		if (program_status != udp_state) {
+			if (state_changed_tick == -1)
+				state_changed_tick = getTick();
+			else if (getTick() - state_changed_tick > tick_to_change_state){
+				program_status = udp_state;
+				bd.setStatus(program_status);
+				bd.setInitFrame(frame);
+				state_changed_tick = -1;
+			}
 		}
 
 		VC >> frame;
