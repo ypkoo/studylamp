@@ -68,17 +68,18 @@ void ButtonDetector::init(){
 
 		}
 		else if (i==3) {
+			Mat examineButtonMask(projRect.size(), CV_8U, Scalar::all(0));
+			circle(examineButtonMask, Point(360*width/2592,230*height/1944), 60*width/2592, Scalar(255,255,255), -1);
+			buttonMasks[i].push_back(examineButtonMask);
+			thresholds[i].push_back(1000); 
+
+
 			Mat backButtonMask(projRect.size(), CV_8U, Scalar::all(0));
 			circle(backButtonMask, Point(backButtonMask.size().width-45*width/2592,backButtonMask.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), -1);
 			buttonMasks[i].push_back(backButtonMask);
-			thresholds[i].push_back(500);   
+			thresholds[i].push_back(500); 
 		}
 		else if (i==4) {
-			Mat backButtonMask0(projRect.size(), CV_8U, Scalar::all(0));
-			circle(backButtonMask0, Point(360*width/2592,230*height/1944), 60*width/2592, Scalar(255,255,255), -1);
-			buttonMasks[i].push_back(backButtonMask0);
-			thresholds[i].push_back(1000); 
-
 			Mat backButtonMask(projRect.size(), CV_8U, Scalar::all(0));
 			circle(backButtonMask, Point(backButtonMask.size().width-45*width/2592,backButtonMask.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), -1);
 			buttonMasks[i].push_back(backButtonMask);
