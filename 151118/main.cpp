@@ -192,6 +192,8 @@ int main(int argc, char **argv){
 	VC>>frame;
 	int loop_tick = getTick();
 	int send_tick = getTick();
+	int state_changed_tick = getTick();
+	int tick_to_change_state = 5000;
 	bd.setInitFrame(frame);
 
 	/* Main loop */
@@ -204,7 +206,7 @@ int main(int argc, char **argv){
 
 debug_time("s", 0);
 		/* Status changed */
-		if (program_status != udp_state){
+		if (program_status != udp_state && (getTick() - state_changed_tick) > tick_to_change_state){
 			program_status = udp_state;
 			bd.setStatus(program_status);
 			bd.setInitFrame(frame);	
