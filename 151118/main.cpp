@@ -179,7 +179,7 @@ int main(int argc, char **argv){
 	/* Objects */
 	Mat frame; // Original camera frame.
 	gesture::result res;
-	PROGRAM_STATUS program_status = STATUS_BOOKCOVER;
+	PROGRAM_STATUS program_status = (PROGRAM_STATUS) setting_load_u32 ("initial_state", 0);
 	bool loop = true;
 	uint64_t hash_val;
 	uint32_t bWidth, bHeight;  // book width and height
@@ -194,6 +194,7 @@ int main(int argc, char **argv){
 	int send_tick = getTick();
 	int state_changed_tick = -1;
 	int tick_to_change_state = setting_load_u32 ("change_time", 10000);
+	bd.setStatus(program_status);
 	bd.setInitFrame(frame);
 
 	/* Main loop */

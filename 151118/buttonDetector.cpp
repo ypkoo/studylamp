@@ -86,6 +86,21 @@ void ButtonDetector::init(){
 			thresholds[i].push_back(500);   
 		}
 		else if (i==5) {
+			Mat backButtonMask0(projRect.size(), CV_8U, Scalar::all(0));
+			circle(backButtonMask0, Point(70*width/2592,backButtonMask0.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), -1);
+			buttonMasks[i].push_back(backButtonMask0);
+			thresholds[i].push_back(200);   
+
+			Mat backButtonMask1(projRect.size(), CV_8U, Scalar::all(0));
+			circle(backButtonMask1, Point(150*width/2592,backButtonMask1.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), -1);
+			buttonMasks[i].push_back(backButtonMask1);
+			thresholds[i].push_back(200);   
+
+			Mat backButtonMask2(projRect.size(), CV_8U, Scalar::all(0));
+			circle(backButtonMask2, Point(230*width/2592,backButtonMask2.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), -1);
+			buttonMasks[i].push_back(backButtonMask2);
+			thresholds[i].push_back(200);   
+
 			Mat backButtonMask(projRect.size(), CV_8U, Scalar::all(0));
 			circle(backButtonMask, Point(backButtonMask.size().width-45*width/2592,backButtonMask.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), -1);
 			buttonMasks[i].push_back(backButtonMask);
@@ -108,39 +123,11 @@ void ButtonDetector::setInitFrame(Mat initFrame){
 vector<unsigned int> ButtonDetector::registerFrame(Mat newFrame){
 	vector<unsigned int> pushedButtons;
 	Mat projFrame = newFrame(projRect);
-// rectangle(projFrame, Rect(200*width/2592, 150*height/1944, projFrame.size().width-200*2*width/2592, 150*height/1944), Scalar(255,255,255), 2);
-// circle(projFrame, Point(projFrame.size().width-45*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
-	// circle(projFrame, Point(360*width/2592,230*height/1944), 60*width/2592, Scalar(255,255,255), 2);
-	// circle(projFrame, Point(projFrame.size().width-45*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
-	rectangle(projFrame, Rect(200*width/2592, 150*height/1944, projFrame.size().width-200*2*width/2592, 150*height/1944), Scalar(255,255,255), 2);
-	circle(projFrame, Point(projFrame.size().width-45*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
-			
-	// int bottomPadding = 150;
-	// int buttonRadius = 50;
-	// circle(projFrame, Point(projFrame.size().width/4+20,projFrame.size().height-bottomPadding-buttonRadius), buttonRadius, Scalar(255,255,255), 2);
-	// circle(projFrame, Point(projFrame.size().width/2+5,projFrame.size().height-bottomPadding-buttonRadius), buttonRadius, Scalar(255,255,255), 2);
-	// circle(projFrame, Point(projFrame.size().width*3/4-15,projFrame.size().height-bottomPadding-buttonRadius), buttonRadius, Scalar(255,255,255), 2);
-
-	// circle(projFrame, Point(projFrame.size().width/4+20,projFrame.size().height-buttonRadius), buttonRadius, Scalar(255,255,255), 2);
-	// circle(projFrame, Point(projFrame.size().width/2+5,projFrame.size().height-buttonRadius), buttonRadius, Scalar(255,255,255), 2);
-	// circle(projFrame, Point(projFrame.size().width*3/4-15,projFrame.size().height-buttonRadius), buttonRadius, Scalar(255,255,255), 2);
-
-	// circle(projFrame, Point(projFrame.size().width-50,50), 30, Scalar(255,255,255), 2);
-
-	Mat visFrame = projFrame.clone();
-	// rectangle(visFrame, Rect(150*width/2592, 150*height/1944, visFrame.size().width-150*2*width/2592, 200*height/1944), Scalar(255,255,255), 2);
-	// rectangle(visFrame, Rect(200*width/2592, 150*height/1944, visFrame.size().width-200*2*width/2592, 150*height/1944), Scalar(0,0,0), 2);
-	// circle(visFrame, Point(visFrame.size().width-45*width/2592,visFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
-	// circle(visFrame, Point(visFrame.size().width-45*width/2592,55*height/1944), 30*width/2592, Scalar(255,255,255), 2);
-	// circle(visFrame, Point(visFrame.size().width*9/32,visFrame.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), 2);
-	// circle(visFrame, Point(visFrame.size().width*16/32,visFrame.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), 2);
-	// circle(visFrame, Point(visFrame.size().width*23/32,visFrame.size().height-210*height/1944), 50*width/2592, Scalar(255,255,255), 2);
-	// circle(visFrame, Point(visFrame.size().width*9/32,visFrame.size().height-50*height/1944), 50*width/2592, Scalar(255,255,255), 2);
-	// circle(visFrame, Point(visFrame.size().width*16/32,visFrame.size().height-50*height/1944), 50*width/2592, Scalar(255,255,255), 2);
-	// circle(visFrame, Point(visFrame.size().width*23/32,visFrame.size().height-50*height/1944), 50*width/2592, Scalar(255,255,255), 2);
-	// circle(visFrame, Point(640*width/2592,460*height/1944), 60*width/2592, Scalar(255,255,255), 2);
-	imshow ("buttons", visFrame);
-
+	
+	circle(projFrame, Point(70*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
+	circle(projFrame, Point(150*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
+	circle(projFrame, Point(230*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
+	
 
 	imshow("projRegion", projFrame);
 
@@ -174,7 +161,7 @@ vector<unsigned int> ButtonDetector::registerFrame(Mat newFrame){
 			pushedButtons.push_back(0);
 		}
 	}
-	// cout << endl;
+	cout << endl;
 
 	// cout << "totalWhites " << totalWhites << " buttonWhites " << buttonWhites;
 	// if ((totalWhites > 1000*width*height/(2592*1944) && totalWhites > buttonWhites * 10) || totalWhites > 10000*width*height/(2592*1944) ){
