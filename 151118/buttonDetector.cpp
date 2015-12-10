@@ -112,6 +112,14 @@ void ButtonDetector::init(){
 			buttonMasks[i].push_back(backButtonMask);
 			thresholds[i].push_back(500);   
 		}
+		else if (i==8) { /* Newly added. */
+			Mat VideoOffMask(projRect.size(), CV_8U, Scalar::all(0));
+			// rectangle(VideoOffMask, Rect(150*width/2592, 150*height/1944, VideoOffMask.size().width-150*2*width/2592, 200*height/1944), Scalar(255,255,255), -1);
+			// rectangle(VideoOffMask, Rect(200*width/2592, 150*height/1944, VideoOffMask.size().width-200*2*width/2592, 150*height/1944), Scalar(0,0,0), -1);
+			rectangle(VideoOffMask, Rect(200*width/2592, 150*height/1944, VideoOffMask.size().width-200*2*width/2592, 150*height/1944), Scalar(255,255,255), -1);
+			buttonMasks[i].push_back(VideoOffMask);
+			thresholds[i].push_back(1000);
+		}
 	}
 }
 void ButtonDetector::setStatus(enum PROGRAM_STATUS newStatus){

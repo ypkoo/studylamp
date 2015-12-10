@@ -245,6 +245,7 @@ debug_time("s", 0);
 			case STATUS_STUDY_SOLVING: // 3
 			case STATUS_STUDY_SOLVED:  // 4
 			case STATUS_BUFFER:        // 7. It needs to send page number.
+			case STATUS_MOVIE_RUNNING: // 8. Movie is running
 debug_time("befdet", 0);
 				dtct.detect(frame, bookImg, pageNum, relpoint);
 debug_time("det", 0);
