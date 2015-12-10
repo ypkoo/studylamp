@@ -13,6 +13,7 @@ enum PROGRAM_STATUS {
     STATUS_BUFFER         = 7
 };
 #define STATUS_MAX 7
+#define NUMBER_OF_STATUS STATUS_MAX+1
 
 // Get current time tick, with unit of milliseconds.
 unsigned int getTick(void);

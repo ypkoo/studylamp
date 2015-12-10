@@ -140,15 +140,17 @@ int Detector::getPageNum(Mat src) {
 		pageImg = src(rc);
 	else
 		pageImg = src.clone();
-
+	imshow("Page image raw", pageImg);
 	Mat sharpen;
 	pyrUp(pageImg, pageImg);
 	GaussianBlur(pageImg, sharpen, Size(0,0), 3);
 	addWeighted(pageImg, 1.5, sharpen, -0.5, 0, sharpen);
 	cvtColor(sharpen, pageImg, CV_BGR2GRAY);
+	imshow("Page image sharpen", pageImg);
 
 	Mat bw;
-	inRange(pageImg, Scalar(0, 0, 0), Scalar(100, 100, 100), bw);
+	uint32_t color_compo = setting_load_u32("pgNumUpperBd", 100);
+	inRange(pageImg, Scalar(0, 0, 0), Scalar(color_compo, color_compo, color_compo), bw); // 100 1개의 변수
 	pyrUp(bw, bw);
 	medianBlur(bw, bw, 5);
 	pyrDown(bw, bw);
@@ -191,12 +193,19 @@ void Detector::cropBook(Mat src, Mat& bookImg, float angle, Mat mask) {
 	Mat bookArea;
 	rotate(canvas, bookImg, angle);
 	rotate(mask, bookArea, angle);
-	bookImg = bookImg(boundingRect(bookArea));	
+	bookImg = bookImg(boundingRect(bookArea));
+	// imshow ("mask", bookArea);
 }
 
 void Detector::detect(Mat frame, Mat& bookImg, int& pageNum, Point& relpoint) {
 	Mat bookMask;
 	detectBook(frame, bookCoord, angle, bookMask);
+	if (bookMask.size() == Size(0, 0)) {
+		cout << "bookImage was not detected" << endl;
+		relpoint = Point(-1, -1);
+		pageNum = -1;
+		return;
+	}
 	cropBook(frame, bookImg, angle, bookMask);
 	relpoint = detectTip(bookImg);
 	pageNum = getPageNum(bookImg);

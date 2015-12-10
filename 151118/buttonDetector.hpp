@@ -31,6 +31,7 @@ class ButtonDetector{
 		unsigned int frameChangeCount;
 		
 		Rect projRect;
+
 		enum PROGRAM_STATUS status;
 		vector<vector<Mat> > buttonMasks;
 		vector<vector<unsigned int> > lastInitTicks;
@@ -38,6 +39,15 @@ class ButtonDetector{
 		vector<vector<unsigned int> > emptyButtonCounts;
 		vector<vector<unsigned int> > thresholds;
 		void init();
+
+		void handleEvent(int evt, int x, int y, int flags);
+		enum _grabStatus{
+			GRAB_NOTHING,
+			GRAB_LEFTTOP,
+			GRAB_RIGHTTOP,
+			GRAB_RIGHTBOTTOM,
+			GRAB_LEFTBOTTOM
+		} grabStatus;
 };
 
 

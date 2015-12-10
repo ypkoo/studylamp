@@ -260,8 +260,6 @@ debug_time("reg", 0);
 					checkX = -1; checkY = -1;
 				}
 debug_time("etc", 0);
-
-
 				break;
 
 			case STATUS_MAINMENU:        // 1
@@ -280,7 +278,7 @@ debug_time("but", 1);
 
 #ifdef _WIN32
 		msg.send_message("%d;%d;%d;%d;%d;%d;%d;%d;%s", (int)program_status, bWidth, bHeight, tipX, tipY, checkX, checkY, pageNum, button_ss.str().c_str());
-		// msg.print_buf();
+		msg.print_buf();
 #endif
 
 
