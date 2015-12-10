@@ -193,7 +193,7 @@ int main(int argc, char **argv){
 	int loop_tick = getTick();
 	int send_tick = getTick();
 	int state_changed_tick = getTick();
-	int tick_to_change_state = 5000;
+	int tick_to_change_state = setting_load_u32 ("change_time", 15000);
 	bd.setInitFrame(frame);
 
 	/* Main loop */

@@ -25,6 +25,8 @@ b   50
 c  50
 d  40
 
+change_time       15000    # 애니메이션 소요 milliseconds 단위
+
 gest:time_to_group   600       # 모션 시작점 최소 대기 시간 [milliseconds] (초기값 600)
 gest:time_to_motion  1000      # 모션 시작부터 모션 정보 수집 시간 [milliseconds] (초기값 1000)
 gest:epsilon         f0.008     # epsilon 크기의 카메라 높이에 대한 비율 (초기값 0.005)
