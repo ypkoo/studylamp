@@ -243,21 +243,22 @@ result Gesture::registerPoint(Point P, uint32_t t)
 				// 	printf("[%u]: (%d, %d)\n", marked[i], points[marked[i]].x, points[marked[i]].y);
 				// }
 
-				float x[4];
-				float y[4];
+				float x[5];
+				float y[5];
 
 				size_t tmp;
-				for (tmp = 0; tmp < marked.size() && tmp < 4; tmp++) {
+				for (tmp = 0; tmp < marked.size() && tmp < 5; tmp++) {
 					x[tmp] = (float) points[marked[tmp]].x;
 					y[tmp] = (float) points[marked[tmp]].y;
+					// cout << tmp << ":" << x[tmp] << " ";
 				}
 				// v case. 0.5 through 3
-				// cout << "analyzing... ";
+				// cout << "analyzing... " << marked.size() << endl;
 				if (marked.size() >= 3 && x[1] != x[0] && x[2] != x[1]) {
 					float slope1 = (y[0]-y[1])/(x[0]-x[1]);
 					float slope2 = (y[1]-y[2])/(x[1]-x[2]);
 					// printf("slope %f %f\n", slope1, slope2);
-					if (4 > slope1 && slope1 > 0.3
+					if (10 > slope1 && slope1 > 0.3
 						&& -4 < slope2 && slope2 < -0.3) {
 						res.type = V_TYPE;
 						res.V1_x = x[0];
@@ -269,8 +270,29 @@ result Gesture::registerPoint(Point P, uint32_t t)
 						// cout << "v shape found" << endl;
 					}
 				}
-				else {
-
+				if (res.type == NO_TYPE && marked.size() >= 4
+					&& (x[1] != x[0]) 
+					&& (x[2] != x[1]) 
+					&& (x[3] != x[2])){
+					float slope1 = (y[0]-y[1])/(x[0]-x[1]);
+					float slope2 = (y[1]-y[2])/(x[1]-x[2]);
+					float slope3 = (y[2]-y[3])/(x[2]-x[3]);
+					printf("slope %f %f %f\n", slope1, slope2, slope3);
+					if (0.5 > slope1 && slope1 > -0.5
+						&& 0.5 > slope2 && slope2 > -0.5
+						&& 0.5 > slope3 && slope3 > -0.5
+						&& x[1] > x[0] && x[2] < x[1]) {
+						res.type = NONO_TYPE;
+						res.L1_x = x[0];
+						res.L1_y = y[0];
+						res.L2_x = x[1];
+						res.L2_y = y[1];
+						res.L3_x = x[2];
+						res.L3_y = y[2];
+						res.L4_x = x[3];
+						res.L4_y = y[3];
+						cout << "nono shape found" << endl;
+					}
 				}
 
 				// clear all preceding groups.

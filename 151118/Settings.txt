@@ -12,8 +12,8 @@
 # SETTING4 f0.3
 # SETTING5 f-3.132
 
-device_num        1       # 카메라 장비 번호
-initial_state     5       # 초기 state (0~7 사이 값)
+device_num        0       # 카메라 장비 번호
+initial_state     0       # 초기 state (0~7 사이 값)
 loop_minimum      0       # 프로그램 주요 loop 실행 최소 주기 [milliseconds]
 send_msg_period   300     # 메시지 보내는 최소 주기 (아직 구현 안함)
 pgNumUpperBd      100     # 페이지 번호 영역 grayScale upperbound
@@ -25,10 +25,18 @@ b   50
 c  50
 d  40
 
-change_time       15000    # 애니메이션 소요 milliseconds 단위
+projX             950    # 버튼잡기 위한 프로젝터 영역 X좌표
+projY             270    # 버튼잡기 위한 프로젝터 영역 Y좌표
+
+udp_msg_print?    0      # udp 메시지 프린트할까?
+size_debug?       1      # contour 사이즈 디버깅중?
+contour_size      120    # contour 최소 사이즈
+
+
+change_time       3000    # 애니메이션 소요 milliseconds 단위
 
 gest:time_to_group   600       # 모션 시작점 최소 대기 시간 [milliseconds] (초기값 600)
-gest:time_to_motion  1000      # 모션 시작부터 모션 정보 수집 시간 [milliseconds] (초기값 1000)
+gest:time_to_motion  1500      # 모션 시작부터 모션 정보 수집 시간 [milliseconds] (초기값 1000)
 gest:epsilon         f0.008     # epsilon 크기의 카메라 높이에 대한 비율 (초기값 0.005)
 
 

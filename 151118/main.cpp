@@ -145,6 +145,7 @@ int main(int argc, char **argv){
 	int dev_num = setting_load_u32 ("device_num", 0);
 	int loop_period = setting_load_u32 ("loop_minimum", 0);
 	int send_msg_period = setting_load_u32 ("send_msg_period", 100);
+	int udp_msg_print = setting_load_u32 ("udp_msg_print?", 1);
 
 	/* Initialize camera device */
 	VideoCapture VC(dev_num);
@@ -235,7 +236,8 @@ debug_time("s", 0);
 				// printf("hash_value %" PRIu64 "\n", hash_val);
 #ifdef _WIN32
 				msg.send_message("%d;%" PRIu64 , (int) program_status, hash_val);
-				// msg.print_buf();
+				if (udp_msg_print)
+					msg.print_buf();
 #endif
 				key = cv::waitKey (30);
 				if (key == 'q')
@@ -245,7 +247,6 @@ debug_time("s", 0);
 			case STATUS_STUDY_SOLVING: // 3
 			case STATUS_STUDY_SOLVED:  // 4
 			case STATUS_BUFFER:        // 7. It needs to send page number.
-			case STATUS_MOVIE_RUNNING: // 8. Movie is running
 debug_time("befdet", 0);
 				dtct.detect(frame, bookImg, pageNum, relpoint);
 debug_time("det", 0);
@@ -276,6 +277,52 @@ debug_time("etc", 0);
 			case STATUS_REVIEW:          // 6
 				/* Button processing */
 				bWidth = bHeight = tipX = tipY = checkX = checkY = pageNum = 0;
+				break;
+
+			case STATUS_MOVIE_RUNNING: // 8. Movie is running
+debug_time("befdet", 0);
+				dtct.detect(frame, bookImg, pageNum, relpoint);
+debug_time("det", 0);
+
+				abspoint = dtct.rel2abs(relpoint);
+				res = gest.registerPoint(abspoint, getTick());
+debug_time("reg", 0);
+#ifdef DEBUG
+				gestFrame = frame.clone();
+				gest.visualize(gestFrame, getTick());
+				circle(gestFrame, abspoint, 5, Scalar(0, 0, 255), CV_FILLED);
+				imshow("Gest", gestFrame);
+#endif
+				bWidth = bookImg.cols; bHeight = bookImg.rows;
+				tipX = relpoint.x; tipY = relpoint.y;
+				checkX = 0;
+				if (res.type == gesture::NONO_TYPE) {
+					Point relNoPoint1 = dtct.abs2rel(Point(res.L1_x, res.L1_y));
+					Point relNoPoint2 = dtct.abs2rel(Point(res.L2_x, res.L2_y));
+					Point relNoPoint3 = dtct.abs2rel(Point(res.L3_x, res.L3_y));
+					Point relNoPoint4 = dtct.abs2rel(Point(res.L4_x, res.L4_y));
+					Rect r(0, 0, bWidth, bHeight);
+					if (r.contains(relNoPoint1)
+						&& r.contains(relNoPoint2)
+						&& r.contains(relNoPoint3)
+						&& r.contains(relNoPoint4)
+						&& norm (relNoPoint2-relNoPoint1) < 150
+						&& norm (relNoPoint3-relNoPoint2) < 150
+						&& norm (relNoPoint4-relNoPoint3) < 150) {
+						checkX = 1;
+					}
+				}
+				else {
+				}
+#ifdef _WIN32
+				msg.send_message("%d;%d;%d;%d;%d;%d;%d;%d;%d", (int)program_status, bWidth, bHeight, tipX, tipY, -1, -1, pageNum, checkX);
+				if (udp_msg_print)
+					msg.print_buf();
+#endif
+				key = cv::waitKey (30);
+				if (key == 'q')
+					loop = false;
+				continue;
 		}
 
 		// Button processing part
@@ -287,7 +334,8 @@ debug_time("but", 1);
 
 #ifdef _WIN32
 		msg.send_message("%d;%d;%d;%d;%d;%d;%d;%d;%s", (int)program_status, bWidth, bHeight, tipX, tipY, checkX, checkY, pageNum, button_ss.str().c_str());
-		msg.print_buf();
+		if (udp_msg_print)
+			msg.print_buf();
 #endif
 
 

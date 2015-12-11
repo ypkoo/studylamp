@@ -1,6 +1,7 @@
 
 #include "common.hpp"
 #include "buttonDetector.hpp"
+#include "settingLoader.hpp"
 
 #define PI 3.14159
 #define NUMBER_OF_BUTTONS 3
@@ -11,7 +12,10 @@ ButtonDetector::ButtonDetector(unsigned int _width, unsigned int _height)
 {
 	width = _width;
 	height = _height;
-	projRect = Rect(950*width/2592,270*height/1944,720*width/2592,460*height/1944);
+
+	uint32_t projX = setting_load_u32 ("projX", 950);
+	uint32_t projY = setting_load_u32 ("projY", 270);
+	projRect = Rect(projX*width/2592,projY*height/1944,720*width/2592,460*height/1944);
 	status = STATUS_BOOKCOVER; // 0
 	init();
 }
@@ -131,13 +135,17 @@ void ButtonDetector::setInitFrame(Mat initFrame){
 vector<unsigned int> ButtonDetector::registerFrame(Mat newFrame){
 	vector<unsigned int> pushedButtons;
 	Mat projFrame = newFrame(projRect);
-	
-	circle(projFrame, Point(70*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
-	circle(projFrame, Point(150*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
-	circle(projFrame, Point(230*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
-	
 
-	imshow("projRegion", projFrame);
+	Mat dbgFrame = projFrame.clone();
+	// circle(projFrame, Point(70*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
+	// circle(projFrame, Point(150*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
+	// circle(projFrame, Point(230*width/2592,projFrame.size().height-137*height/1944), 30*width/2592, Scalar(255,255,255), 2);
+	circle(dbgFrame, Point(dbgFrame.size().width*8/32,dbgFrame.size().height-220*height/1944), 50*width/2592, Scalar(255,255,255), 2);
+	circle(dbgFrame, Point(dbgFrame.size().width*16/32,dbgFrame.size().height-220*height/1944), 50*width/2592, Scalar(255,255,255), 2);
+	circle(dbgFrame, Point(dbgFrame.size().width*24/32,dbgFrame.size().height-220*height/1944), 50*width/2592, Scalar(255,255,255), 2);
+	circle(dbgFrame, Point(dbgFrame.size().width-40*width/2592,30*height/1944), 30*width/2592, Scalar(255,255,255), 2);
+
+	imshow("projRegion", dbgFrame);
 
 	Mat binary;
 	// cout << initProjFrame.size() << endl;

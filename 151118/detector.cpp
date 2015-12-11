@@ -38,11 +38,13 @@ int Detector::findBiggestContour(vector<vector<Point> > contours) {
 	 int indexOfBiggestContour = -1;
 	 int sizeOfBiggestContour = 0;
 	 for (int i = 0; i < contours.size(); i++){
-		  if(contours[i].size() > 120 && contours[i].size() > sizeOfBiggestContour){
+		  if(contours[i].size() > setting_load_u32("contour_size", 120) && contours[i].size() > sizeOfBiggestContour){
 				sizeOfBiggestContour = contours[i].size();
 				indexOfBiggestContour = i;
 		  }
 	 }
+	 if (indexOfBiggestContour != -1 && setting_load_u32("size_debug?", 1))
+	 	cout << "contour size " << contours[indexOfBiggestContour].size() << endl;
 	 return indexOfBiggestContour;
 }
 

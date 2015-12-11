@@ -70,7 +70,7 @@ namespace gesture{
 	enum result_type {
 		NO_TYPE,
 		V_TYPE,
-		LINELINE_TYPE
+		NONO_TYPE
 	};
 	struct result {
 		enum result_type type;
@@ -88,6 +88,10 @@ namespace gesture{
 				uint32_t L1_y;
 				uint32_t L2_x;
 				uint32_t L2_y;
+				uint32_t L3_x;
+				uint32_t L3_y;
+				uint32_t L4_x;
+				uint32_t L4_y;
 			};
 		};
 	};
